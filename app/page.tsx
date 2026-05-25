@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import StartupGenerator from "./components/StartupGenerator";
+import { OrchestraFlowProvider, useOrchestraFlow } from "./components/OrchestraFlow";
 
 /* ─── Palette & Design Tokens ──────────────────────────────────────────────────
    Blue  : #3B82F6 (accent), #EFF6FF (tint), #DBEAFE (border)
@@ -239,7 +241,15 @@ const colorMap = {
 
 // ─── Components ───────────────────────────────────────────────────────────────
 
-function Nav({ onSection }: { onSection: (s: string) => void }) {
+function Nav({
+  onSection,
+  onGetStarted,
+  onSignIn,
+}: {
+  onSection: (s: string) => void;
+  onGetStarted: () => void;
+  onSignIn: () => void;
+}) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 24);
@@ -273,19 +283,34 @@ function Nav({ onSection }: { onSection: (s: string) => void }) {
           ].map(([label, id]) => (
             <button
               key={id}
+              type="button"
               onClick={() => onSection(id)}
               className="text-[14px] text-slate-500 hover:text-slate-900 font-medium transition-colors"
             >
               {label}
             </button>
           ))}
+          <a
+            href="/projects"
+            className="text-[14px] text-slate-500 hover:text-slate-900 font-medium transition-colors"
+          >
+            My projects
+          </a>
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="text-[14px] text-slate-600 hover:text-slate-900 font-medium px-3 py-2 transition-colors">
+          <button
+            type="button"
+            onClick={onSignIn}
+            className="text-[14px] text-slate-600 hover:text-slate-900 font-medium px-3 py-2 transition-colors"
+          >
             Sign in
           </button>
-          <button className="text-[14px] bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 shadow-md shadow-blue-200">
+          <button
+            type="button"
+            onClick={onGetStarted}
+            className="text-[14px] bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 shadow-md shadow-blue-200"
+          >
             Get started free
           </button>
         </div>
@@ -294,7 +319,7 @@ function Nav({ onSection }: { onSection: (s: string) => void }) {
   );
 }
 
-function HeroSection({ id }: { id: string }) {
+function HeroSection({ id, onGetStarted }: { id: string; onGetStarted: () => void }) {
   const [typed, setTyped] = useState("");
   const phrases = ["writing tool", "analytics platform", "customer support bot", "learning app"];
   const [phraseIdx, setPhraseIdx] = useState(0);
@@ -347,8 +372,11 @@ function HeroSection({ id }: { id: string }) {
 
         <h1 className="text-[56px] md:text-[72px] font-extrabold text-slate-900 leading-[1.08] tracking-tight mb-6">
           Launch your AI{" "}
-          <span className="relative inline-block">
-            <span className="bg-gradient-to-r from-blue-600 via-violet-500 to-blue-500 bg-clip-text text-transparent">
+          <span className="relative inline-block align-bottom">
+            <span aria-hidden="true" className="invisible whitespace-nowrap select-none block">
+              customer support bot
+            </span>
+            <span className="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap bg-gradient-to-r from-blue-600 via-violet-500 to-blue-500 bg-clip-text text-transparent">
               {typed}
               <span className="animate-blink border-r-2 border-blue-500 ml-0.5">&nbsp;</span>
             </span>
@@ -363,7 +391,11 @@ function HeroSection({ id }: { id: string }) {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14">
-          <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-[15px] shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all duration-200">
+          <button
+            type="button"
+            onClick={onGetStarted}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-[15px] shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all duration-200"
+          >
             Start for free
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -1095,7 +1127,7 @@ function PricingSection({ id }: { id: string }) {
   );
 }
 
-function CTASection() {
+function CTASection({ onGetStarted }: { onGetStarted: () => void }) {
   return (
     <section className="py-24 bg-white">
       <div className="max-w-3xl mx-auto px-6 text-center">
@@ -1115,7 +1147,11 @@ function CTASection() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-10 py-4 rounded-2xl font-bold text-[15px] shadow-xl shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all duration-200">
+          <button
+            type="button"
+            onClick={onGetStarted}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-10 py-4 rounded-2xl font-bold text-[15px] shadow-xl shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all duration-200"
+          >
             Start building for free
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -1188,9 +1224,21 @@ function Footer() {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Page() {
+  return (
+    <OrchestraFlowProvider>
+      <PageContent />
+    </OrchestraFlowProvider>
+  );
+}
+
+function PageContent() {
+  const { scrollToGenerate, openSignIn } = useOrchestraFlow();
+
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const handleGetStarted = () => scrollToGenerate({ focus: true });
 
   return (
     <>
@@ -1225,17 +1273,49 @@ export default function Page() {
           0%, 100% { opacity: 0.5; }
           50% { opacity: 1; }
         }
+        @keyframes magic-glow-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.08), 0 24px 80px -12px rgba(59, 130, 246, 0.12); }
+          50% { box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.12), 0 28px 90px -8px rgba(59, 130, 246, 0.18); }
+        }
+        .magic-glow { animation: magic-glow-pulse 2s ease-in-out infinite; }
+        @keyframes shimmer-slide {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .shimmer-bar {
+          position: relative;
+          width: 100%;
+          background: linear-gradient(90deg, #eff6ff, #f5f3ff, #f0fdf4, #eff6ff);
+          background-size: 200% 100%;
+          animation: shimmer-bg 1.8s ease-in-out infinite;
+        }
+        @keyframes shimmer-bg {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        .direction-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: #cbd5e1 transparent;
+        }
+        .direction-scroll::-webkit-scrollbar {
+          height: 6px;
+        }
+        .direction-scroll::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 999px;
+        }
       `}</style>
 
-      <Nav onSection={scrollTo} />
+      <Nav onSection={scrollTo} onGetStarted={handleGetStarted} onSignIn={openSignIn} />
       <main>
-        <HeroSection id="hero" />
+        <HeroSection id="hero" onGetStarted={handleGetStarted} />
         <UnifiedPlatformSection id="unified" />
+        <StartupGenerator />
         <FeaturesSection id="features" />
         <TemplatesSection id="templates" />
         <StepsSection id="steps" />
         <PricingSection id="pricing" />
-        <CTASection />
+        <CTASection onGetStarted={handleGetStarted} />
       </main>
       <Footer />
     </>
