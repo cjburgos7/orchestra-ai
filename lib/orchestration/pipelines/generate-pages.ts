@@ -1,44 +1,24 @@
-import type {
-  GeneratedPages,
-  GeneratedSections,
-  SiteVisuals,
-  StartupBrief,
-} from "@/lib/types/startup";
-import { generateLogo } from "@/lib/orchestration/generate-logo";
+import type { GeneratedPages, GeneratedSections, StartupBrief } from "@/lib/types/startup";
 import type { DirectionId } from "@/lib/types/startup";
+import { buildProductVisualsSync } from "@/lib/orchestration/product-visuals";
 
 function slugify(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-function pickVisual(brief: StartupBrief): SiteVisuals["heroVisual"] {
-  const cat = (brief.startupCategory ?? brief.description).toLowerCase();
-  if (cat.includes("creator") || cat.includes("social")) return "creator";
-  if (cat.includes("analytics") || cat.includes("data")) return "analytics";
-  if (cat.includes("mobile") || cat.includes("app")) return "device";
-  if (cat.includes("workflow") || cat.includes("automation")) return "workflow";
-  return "dashboard";
-}
-
-const ACCENTS = ["#2563eb", "#7c3aed", "#0891b2", "#db2777", "#059669", "#ea580c"];
-
-export function generateVisuals(brief: StartupBrief, seed: string, direction: DirectionId = "orchestra"): SiteVisuals {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h << 5) - h + seed.charCodeAt(i);
-  const accentColor = ACCENTS[Math.abs(h) % ACCENTS.length];
-  const heroVisual = pickVisual(brief);
-  const secondaryOptions: SiteVisuals["secondaryVisual"][] = ["onboarding", "analytics", "saas-panel"];
-  return {
-    heroVisual,
-    secondaryVisual: secondaryOptions[Math.abs(h >> 3) % secondaryOptions.length],
-    accentColor,
-    logo: generateLogo(brief, direction, accentColor, seed),
-  };
+/** @deprecated use buildProductVisuals */
+export function generateVisuals(brief: StartupBrief, seed: string, direction: DirectionId = "orchestra") {
+  return buildProductVisualsSync(brief, seed, direction);
 }
 
 export function generatePages(brief: StartupBrief, sections: GeneratedSections): GeneratedPages {
   const slug = slugify(brief.name);
   const email = `hello@${slug || "startup"}.com`;
+  const stats = sections.visuals?.dashboardStats ?? [
+    { label: "Active users", value: "2,847", change: "+12%" },
+    { label: "Tasks completed", value: "18.4k", change: "+8%" },
+    { label: "Time saved", value: "340h", change: "+24%" },
+  ];
 
   return {
     about: {
@@ -84,11 +64,7 @@ export function generatePages(brief: StartupBrief, sections: GeneratedSections):
     dashboard: {
       headline: "Dashboard",
       welcome: `Welcome back — here's your ${brief.name} overview`,
-      stats: [
-        { label: "Active users", value: "2,847", change: "+12%" },
-        { label: "Tasks completed", value: "18.4k", change: "+8%" },
-        { label: "Time saved", value: "340h", change: "+24%" },
-      ],
+      stats,
     },
     login: {
       headline: `Sign in to ${brief.name}`,

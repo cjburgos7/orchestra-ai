@@ -8,11 +8,15 @@ import { getDirectionLabel } from "@/lib/orchestration/directions";
 import { chatCompletionJSON, OrchestrationError } from "@/lib/orchestration/openai-client";
 import { isGeneratedSections } from "@/lib/orchestration/validators";
 import { fallbackSections } from "@/lib/orchestration/pipelines/section-fallback";
-import { generateVisuals } from "@/lib/orchestration/pipelines/generate-pages";
+import { buildProductVisuals, buildSectionGenerationContext } from "@/lib/orchestration/product-visuals";
+import { resolutionCopyContext } from "@/lib/orchestration/category-resolution";
+import { imageryCopyGuard } from "@/lib/orchestration/category-imagery";
+import { resolveCategory } from "@/lib/orchestration/category-resolution";
 
 type Input = {
   brief: StartupBrief;
   direction: DirectionId;
+  seed?: string;
 };
 
 /** Generates website sections in modular steps for cleaner orchestration */
@@ -78,7 +82,11 @@ export async function runGenerateSectionsPipeline(input: Input): Promise<Generat
     if (isGeneratedSections(merged)) {
       return {
         ...merged,
-        visuals: generateVisuals(input.brief, input.direction, input.direction),
+        visuals: await buildProductVisuals(
+          input.brief,
+          input.seed ?? `${input.brief.name}:${input.direction}`,
+          input.direction
+        ),
       };
     }
   } catch (err) {
@@ -88,7 +96,11 @@ export async function runGenerateSectionsPipeline(input: Input): Promise<Generat
 
   return {
     ...fallbackSections(input.brief, directionLabel),
-    visuals: generateVisuals(input.brief, input.direction, input.direction),
+    visuals: await buildProductVisuals(
+      input.brief,
+      input.seed ?? `${input.brief.name}:${input.direction}`,
+      input.direction
+    ),
   };
 }
 
@@ -128,11 +140,21 @@ export async function runRegenerateSectionPipeline(
 }
 
 function buildPrompt(brief: StartupBrief, directionLabel: string, focus: string) {
-  return `Startup: ${brief.name}
+  const resolution = resolveCategory(brief);
+  const worldContext = buildSectionGenerationContext(brief);
+  return `${resolutionCopyContext(resolution)}
+${imageryCopyGuard(resolution)}
+
+${worldContext}
+
+Startup: ${brief.name}
 Tagline: ${brief.tagline}
 Description: ${brief.description}
 Features: ${brief.features.join("; ")}
 Direction: ${directionLabel}
 Focus: ${focus}
-Write believable, premium copy. No markdown.`;
+
+Write believable, category-native copy aligned to the WORLD DNA above.
+Use the feature archetype titles as inspiration — adapt them to this specific startup.
+No markdown. No generic SaaS filler like "Simple setup" or "Smart automation".`;
 }

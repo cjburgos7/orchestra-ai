@@ -11,9 +11,18 @@ import { migrateProject } from "@/lib/persistence/projects";
 import ProjectWebsite from "./ProjectWebsite";
 import GuidedEditor from "./GuidedEditor";
 import LaunchModal from "./LaunchModal";
+import WorkspaceSidebar, { type SidebarPanel } from "./WorkspaceSidebar";
 
 type Props = {
   initialProject: StartupProject;
+};
+
+const PANEL_TO_EDITOR: Partial<Record<SidebarPanel, string>> = {
+  brand: "brand",
+  directions: "style",
+  assets: "style",
+  settings: "style",
+  editor: "hero",
 };
 
 export default function ProjectWorkspace({ initialProject }: Props) {
@@ -21,6 +30,8 @@ export default function ProjectWorkspace({ initialProject }: Props) {
   const [launchOpen, setLaunchOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(true);
   const [activePage, setActivePage] = useState<SitePageId>("home");
+  const [activePanel, setActivePanel] = useState<SidebarPanel>("editor");
+  const [editorTab, setEditorTab] = useState("hero");
 
   useEffect(() => {
     setProject(migrateProject(initialProject));
@@ -33,6 +44,14 @@ export default function ProjectWorkspace({ initialProject }: Props) {
 
   const handlePageChange = useCallback((page: SitePageId) => {
     setActivePage(page);
+  }, []);
+
+  const handlePanelChange = useCallback((panel: SidebarPanel) => {
+    setActivePanel(panel);
+    const tab = PANEL_TO_EDITOR[panel];
+    if (tab) setEditorTab(tab);
+    if (panel === "editor") setEditOpen(true);
+    if (panel === "pages") setEditOpen(false);
   }, []);
 
   const brief = briefFromProject(project);
@@ -51,40 +70,26 @@ export default function ProjectWorkspace({ initialProject }: Props) {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-violet-400 flex items-center justify-center">
-                <span className="text-white text-[10px] font-bold">O</span>
-              </div>
-              <span className="text-sm font-bold text-slate-900 hidden sm:inline">Orchestra</span>
-            </Link>
-            <span className="text-slate-300 hidden sm:inline">/</span>
-            <Link href="/projects" className="text-sm font-semibold text-slate-500 hover:text-slate-800 truncate hidden sm:inline">
-              Projects
-            </Link>
-            <span className="text-slate-300 hidden sm:inline">/</span>
-            <span className="text-sm font-semibold text-slate-700 truncate">{project.startupName}</span>
-          </div>
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-100 lg:hidden">
+        <div className="px-4 h-14 flex items-center justify-between gap-3">
+          <Link href="/" className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-violet-400 flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-[10px] font-bold">O</span>
+            </div>
+            <span className="text-sm font-bold text-slate-900 truncate">{project.startupName}</span>
+          </Link>
           <div className="flex items-center gap-2">
-            <Link
-              href="/projects"
-              className="text-xs font-medium text-slate-500 hover:text-slate-800 px-3 py-1.5"
-            >
-              ← Projects
-            </Link>
             <button
               type="button"
               onClick={() => setEditOpen((o) => !o)}
-              className="text-xs font-semibold text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50"
+              className="text-xs font-semibold text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg"
             >
-              {editOpen ? "Hide editor" : "Edit"}
+              {editOpen ? "Preview" : "Edit"}
             </button>
             <button
               type="button"
               onClick={() => setLaunchOpen(true)}
-              className="text-xs font-bold bg-blue-600 text-white px-4 py-2 rounded-xl shadow-md shadow-blue-200 hover:bg-blue-700"
+              className="text-xs font-bold bg-blue-600 text-white px-3 py-1.5 rounded-xl"
             >
               Launch
             </button>
@@ -92,55 +97,85 @@ export default function ProjectWorkspace({ initialProject }: Props) {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        {editOpen && (
-          <GuidedEditor
-            project={project}
-            onUpdate={handleUpdate}
-            activePage={activePage}
-            onPageChange={handlePageChange}
-          />
-        )}
+      <div className="flex max-w-[1600px] mx-auto">
+        <WorkspaceSidebar
+          project={project}
+          activePage={activePage}
+          onPageChange={handlePageChange}
+          activePanel={activePanel}
+          onPanelChange={handlePanelChange}
+          editorOpen={editOpen}
+          onToggleEditor={() => setEditOpen((o) => !o)}
+          onLaunch={() => setLaunchOpen(true)}
+        />
 
-        <div className="rounded-3xl overflow-hidden border border-slate-200 shadow-xl shadow-slate-200/40">
-          <div className="bg-slate-50 border-b border-slate-100 px-3 py-2 space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] text-slate-500">
-                Live preview · {getDirectionLabel(direction)}
-              </span>
-              <span className="text-[10px] font-semibold text-green-700 bg-green-50 border border-green-100 rounded-full px-2 py-0.5">
-                Saved locally
-              </span>
+        <main className="flex-1 min-w-0 px-4 sm:px-6 py-6">
+          <div className="hidden lg:flex items-center justify-between mb-4">
+            <div>
+              <p className="text-xs text-slate-400">Live preview</p>
+              <p className="text-sm font-bold text-slate-800">{getDirectionLabel(direction)}</p>
             </div>
-            <div className="flex gap-1 overflow-x-auto pb-0.5 direction-scroll">
-              {SITE_PAGES.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => handlePageChange(p.id)}
-                  className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-all ${
-                    activePage === p.id
-                      ? "bg-white text-blue-700 border border-blue-200 shadow-sm"
-                      : "text-slate-500 hover:text-slate-800 hover:bg-white/60"
-                  }`}
-                >
-                  {p.label}
-                </button>
-              ))}
+            <div className="flex items-center gap-2">
+              <Link href="/projects" className="text-xs font-medium text-slate-500 hover:text-slate-800 px-3 py-1.5">
+                All projects
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditOpen((o) => !o);
+                  setActivePanel("editor");
+                }}
+                className="text-xs font-semibold text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-white"
+              >
+                {editOpen ? "Hide editor" : "Show editor"}
+              </button>
             </div>
           </div>
-          <ProjectWebsite
-            brief={brief}
-            sections={sections}
-            pages={pages}
-            direction={direction}
-            variant="full"
-            showOrchestraLinks
-            projectSlug={project.slug}
-            activePage={activePage}
-            onPageChange={handlePageChange}
-          />
-        </div>
+
+          {editOpen && (
+            <GuidedEditor
+              project={project}
+              onUpdate={handleUpdate}
+              activePage={activePage}
+              onPageChange={handlePageChange}
+              openPanel={editorTab}
+              onPanelChange={setEditorTab}
+            />
+          )}
+
+          <div className="rounded-3xl overflow-hidden border border-slate-200 shadow-xl shadow-slate-200/40">
+            <div className="bg-slate-50 border-b border-slate-100 px-3 py-2 space-y-2 lg:hidden">
+              <div className="flex gap-1 overflow-x-auto pb-0.5">
+                {SITE_PAGES.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handlePageChange(p.id)}
+                    className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap ${
+                      activePage === p.id
+                        ? "bg-white text-blue-700 border border-blue-200 shadow-sm"
+                        : "text-slate-500"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <ProjectWebsite
+              brief={brief}
+              sections={sections}
+              pages={pages}
+              direction={direction}
+              variant="full"
+              showOrchestraLinks
+              projectSlug={project.slug}
+              projectSeed={project.id}
+              activePage={activePage}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        </main>
       </div>
 
       <LaunchModal

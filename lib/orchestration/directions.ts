@@ -1,4 +1,5 @@
 import type { CoreDirectionId, DirectionId } from "@/lib/types/startup";
+import { CORE_DIRECTIONS as CORE_IDS } from "@/lib/types/startup";
 import { getWildcardMeta, isWildcardDirection } from "@/lib/orchestration/wildcards";
 
 export type DirectionMeta = {
@@ -38,6 +39,11 @@ export const CORE_DIRECTIONS: DirectionMeta[] = [
 
 /** @deprecated use CORE_DIRECTIONS */
 export const DIRECTIONS = CORE_DIRECTIONS;
+
+export function isValidDirection(id: string): id is DirectionId {
+  if (CORE_IDS.includes(id as CoreDirectionId)) return true;
+  return isWildcardDirection(id);
+}
 
 export function getDirectionLabel(id: DirectionId): string {
   const core = CORE_DIRECTIONS.find((d) => d.id === id);

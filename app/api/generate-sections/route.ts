@@ -1,18 +1,12 @@
 import { NextResponse } from "next/server";
 import type { DirectionId } from "@/lib/types/startup";
+import { isValidDirection } from "@/lib/orchestration/directions";
 import { OrchestrationError } from "@/lib/orchestration/openai-client";
 import { runGenerateSectionsPipeline } from "@/lib/orchestration/pipelines/generate-sections";
 import { isStartupBrief } from "@/lib/orchestration/validators";
 
-const VALID_DIRECTIONS: DirectionId[] = [
-  "orchestra",
-  "premium-dark",
-  "bold-experimental",
-  "minimal-clean",
-];
-
 export async function POST(request: Request) {
-  let body: { brief?: unknown; direction?: string };
+  let body: { brief?: unknown; direction?: string; seed?: string };
   try {
     body = await request.json();
   } catch {
@@ -24,12 +18,16 @@ export async function POST(request: Request) {
   }
 
   const direction = body.direction as DirectionId;
-  if (!VALID_DIRECTIONS.includes(direction)) {
+  if (!direction || !isValidDirection(direction)) {
     return NextResponse.json({ error: "Valid visual direction is required." }, { status: 400 });
   }
 
   try {
-    const sections = await runGenerateSectionsPipeline({ brief: body.brief, direction });
+    const sections = await runGenerateSectionsPipeline({
+      brief: body.brief,
+      direction,
+      seed: typeof body.seed === "string" ? body.seed : undefined,
+    });
     return NextResponse.json({ sections });
   } catch (err) {
     if (err instanceof OrchestrationError) {

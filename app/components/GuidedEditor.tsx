@@ -12,6 +12,7 @@ import type {
 import { briefFromProject } from "@/lib/types/startup";
 import { buildDirectionOptions } from "@/lib/orchestration/directions";
 import { pickWildcards } from "@/lib/orchestration/wildcards";
+import { buildProductVisualsSync } from "@/lib/orchestration/product-visuals";
 import { saveProject } from "@/lib/persistence/projects";
 
 const ACCENT_SWATCHES = ["#2563eb", "#7c3aed", "#0891b2", "#db2777", "#059669", "#ea580c", "#0f172a"];
@@ -21,11 +22,22 @@ type Props = {
   onUpdate: (next: StartupProject) => void;
   activePage: SitePageId;
   onPageChange: (page: SitePageId) => void;
+  openPanel?: string;
+  onPanelChange?: (panel: string) => void;
 };
 
-export default function GuidedEditor({ project, onUpdate, activePage, onPageChange }: Props) {
+export default function GuidedEditor({
+  project,
+  onUpdate,
+  activePage,
+  onPageChange,
+  openPanel: openPanelProp,
+  onPanelChange,
+}: Props) {
   const [regenerating, setRegenerating] = useState<SectionKey | null>(null);
-  const [openPanel, setOpenPanel] = useState("brand");
+  const [openPanelLocal, setOpenPanelLocal] = useState("brand");
+  const openPanel = openPanelProp ?? openPanelLocal;
+  const setOpenPanel = onPanelChange ?? setOpenPanelLocal;
   const abortRef = useRef<AbortController | null>(null);
   const projectRef = useRef(project);
   projectRef.current = project;
@@ -102,14 +114,50 @@ export default function GuidedEditor({ project, onUpdate, activePage, onPageChan
     }
   }
 
+  async function switchDirection(d: DirectionId) {
+    const current = projectRef.current;
+    const secs = current.generatedSections!;
+    const currentBrief = briefFromProject(current);
+
+    try {
+      const res = await fetch("/api/rebuild-visuals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brief: currentBrief, seed: current.id, direction: d }),
+      });
+      const data = await res.json();
+      if (res.ok && data.visuals) {
+        persist({
+          ...current,
+          selectedDirection: d,
+          generatedSections: { ...secs, visuals: data.visuals },
+        });
+        return;
+      }
+    } catch {
+      // fall through to sync gradient placeholder
+    }
+
+    persist({
+      ...current,
+      selectedDirection: d,
+      generatedSections: {
+        ...secs,
+        visuals: buildProductVisualsSync(currentBrief, current.id, d),
+      },
+    });
+  }
+
   function setAccent(color: string) {
     const current = projectRef.current;
     const secs = current.generatedSections!;
+    if (!secs.visuals) {
+      const visuals = buildProductVisualsSync(brief, current.id, direction);
+      patchSections({ visuals: { ...visuals, accentColor: color } });
+      return;
+    }
     patchSections({
-      visuals: {
-        heroVisual: secs.visuals?.heroVisual ?? "dashboard",
-        accentColor: color,
-      },
+      visuals: { ...secs.visuals, accentColor: color },
     });
   }
 
@@ -328,7 +376,7 @@ export default function GuidedEditor({ project, onUpdate, activePage, onPageChan
                   <button
                     key={d.id}
                     type="button"
-                    onClick={() => persist({ ...project, selectedDirection: d.id as DirectionId })}
+                    onClick={() => switchDirection(d.id as DirectionId)}
                     className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all ${
                       direction === d.id
                         ? "bg-blue-600 text-white border-blue-600"

@@ -104,7 +104,7 @@ export default function StartupGenerator() {
       const res = await fetch("/api/generate-sections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brief, direction }),
+        body: JSON.stringify({ brief, direction, seed: project.id }),
       });
 
       const data = await res.json();
@@ -343,6 +343,7 @@ export default function StartupGenerator() {
               <LandingPagePreview
                 brief={brief}
                 seed={project?.id ?? brief.name}
+                wildcardDirections={project?.wildcardDirections}
                 onContinue={handleContinue}
                 continuing={continuing}
               />

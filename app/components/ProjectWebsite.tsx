@@ -6,6 +6,7 @@ import { DIRECTION_THEMES } from "@/lib/orchestration/direction-themes";
 import { getDirectionLabel } from "@/lib/orchestration/directions";
 import { generatePages } from "@/lib/orchestration/pipelines/generate-pages";
 import SiteNavigation from "./SiteNavigation";
+import { ProjectMotionStyles } from "./VisualMotion";
 import { renderSitePage } from "./SitePageViews";
 
 type Props = {
@@ -16,6 +17,7 @@ type Props = {
   variant?: "preview" | "full";
   showOrchestraLinks?: boolean;
   projectSlug?: string;
+  projectSeed?: string;
   activePage?: SitePageId;
   onPageChange?: (page: SitePageId) => void;
 };
@@ -28,6 +30,7 @@ export default function ProjectWebsite({
   variant = "full",
   showOrchestraLinks = false,
   projectSlug,
+  projectSeed,
   activePage: controlledPage,
   onPageChange,
 }: Props) {
@@ -71,10 +74,12 @@ export default function ProjectWebsite({
     isPreview,
     accentColor,
     onSectionJump: handleSectionJump,
+    seed: projectSeed ?? brief.name,
   };
 
   return (
     <div className={shell}>
+      <ProjectMotionStyles />
       {isPreview && (
         <div className={`flex items-center gap-2 px-4 py-2.5 border-b ${theme.nav}`}>
           <div className="flex gap-1">

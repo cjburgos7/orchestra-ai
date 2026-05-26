@@ -63,11 +63,165 @@ export type StartupLogo = {
   secondaryColor: string;
 };
 
+export type ProductCategory =
+  | "pets"
+  | "food"
+  | "floral"
+  | "fashion"
+  | "luxury"
+  | "sports"
+  | "creator"
+  | "fitness"
+  | "science"
+  | "finance"
+  | "wellness"
+  | "edtech"
+  | "gaming"
+  | "music"
+  | "health"
+  | "saas"
+  | "productivity"
+  | "ecommerce"
+  | "generic";
+
+export type VisualId =
+  | "dashboard"
+  | "analytics"
+  | "device"
+  | "workflow"
+  | "creator"
+  | "onboarding"
+  | "saas-panel"
+  | "fitness-tracker"
+  | "health-metrics"
+  | "creator-timeline"
+  | "creator-analytics"
+  | "finance-charts"
+  | "fashion-editorial"
+  | "trend-dashboard"
+  | "learning-progress";
+
+export type MotionProfile = "calm" | "cinematic" | "energetic" | "editorial";
+
+export type BackgroundStyle =
+  | "mesh"
+  | "gradient-drift"
+  | "aurora"
+  | "space"
+  | "soft"
+  | "editorial"
+  | "photo"
+  | "none";
+
+export type HeroImageryMode = "full" | "split" | "background" | "minimal" | "collage";
+
+export type HomeSectionId =
+  | "features"
+  | "showcase"
+  | "collections"
+  | "promo"
+  | "categories"
+  | "story"
+  | "sourcing"
+  | "subscription"
+  | "lifestyle"
+  | "testimonials"
+  | "pricing"
+  | "faq"
+  | "cta"
+  | "analytics"
+  | "platform"
+  | "metrics"
+  | "seasonal";
+
+export type VisualEnergy = "calm" | "bold" | "cinematic" | "editorial";
+
+export type CreativeLayoutConfig = {
+  hero: import("@/lib/orchestration/direction-layouts").HeroLayout;
+  features: import("@/lib/orchestration/direction-layouts").FeaturesLayout;
+  testimonials: import("@/lib/orchestration/direction-layouts").TestimonialLayout;
+  cta: import("@/lib/orchestration/direction-layouts").CtaLayout;
+  heroPadding: string;
+  sectionGap: string;
+  headlineScale: string;
+  ctaRounded: string;
+  sectionOrder: HomeSectionId[];
+  heroImagery: HeroImageryMode;
+  showStory: boolean;
+  showLifestyle: boolean;
+  showShowcase: boolean;
+  showCollections: boolean;
+  showPromo: boolean;
+  showCategories: boolean;
+  imageFeatures: boolean;
+  backgroundStyle: BackgroundStyle;
+  typographyModifier: string;
+  visualEnergy: VisualEnergy;
+};
+
+export type ProductCard = {
+  name: string;
+  price: string;
+  image: string;
+  imageFallback: string;
+  imageChain?: string[];
+};
+
+export type ImageryInventoryMeta = {
+  photoCount: number;
+  hydratedSlots: number;
+  maxProducts: number;
+  maxLifestyle: number;
+  hidePromo: boolean;
+  hideCollections: boolean;
+  hideCategories: boolean;
+  hideLifestyle: boolean;
+  hideShowcase: boolean;
+};
+
+export type ImagerySet = {
+  hero: string;
+  heroFallback: string;
+  heroChain: string[];
+  heroAlt: string;
+  lifestyle: string[];
+  lifestyleFallbacks: string[];
+  products: ProductCard[];
+  meshFrom: string;
+  meshTo: string;
+  /** CSS gradient / cinematic texture — never logo blocks */
+  fallbackGradient?: string;
+  /** @deprecated no longer rendered — kept for persisted projects */
+  fallbackLabel?: string;
+  /** Slot inventory + layout compression hints from hydration */
+  inventory?: ImageryInventoryMeta;
+  /** Art-directed selection metadata */
+  artDirection?: import("@/lib/imagery/image-types").ArtDirectedImageryMeta;
+};
+
 export type SiteVisuals = {
-  heroVisual: "dashboard" | "device" | "analytics" | "workflow" | "creator" | "onboarding" | "saas-panel";
-  secondaryVisual?: "onboarding" | "analytics" | "saas-panel";
+  productCategory: ProductCategory;
+  /** Resolved secondary — dominates imagery selection */
+  secondaryCategory?: string;
+  visualWorld?: string;
+  /** World DNA identity — drives section archetypes and density */
+  worldMode?: string;
+  worldDnaId?: string;
+  /** When true, suppress SaaS dashboard/device mockups — imagery-only heroes */
+  imageryOnly: boolean;
+  heroVisual: VisualId;
+  secondaryVisual: VisualId;
+  featureVisual: VisualId;
+  dashboardStats: { label: string; value: string; change: string }[];
   accentColor: string;
+  motion: MotionProfile;
+  layout: CreativeLayoutConfig;
+  imagery: ImagerySet;
   logo?: StartupLogo;
+  /** Cinematic motion layers for ambient backgrounds */
+  motionLayers?: import("@/lib/imagery/image-types").MotionLayer[];
+  /** Layout density to prevent dead space */
+  densityRules?: import("@/lib/imagery/image-types").LayoutDensityRules;
 };
 
 /** Modular website sections (home page) */

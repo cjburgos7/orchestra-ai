@@ -1,6 +1,19 @@
 import type { DirectionId } from "@/lib/types/startup";
 
-export type HeroLayout = "centered" | "split" | "left" | "cinematic" | "minimal";
+export type HeroLayout =
+  | "centered"
+  | "split"
+  | "left"
+  | "cinematic"
+  | "minimal"
+  | "asymmetrical"
+  | "editorial"
+  | "immersive"
+  | "visual-first"
+  | "fullscreen"
+  | "collage"
+  | "editorial-split"
+  | "product-first";
 export type FeaturesLayout = "grid-4" | "grid-2" | "list" | "bento" | "staggered";
 export type TestimonialLayout = "grid" | "featured" | "minimal";
 export type CtaLayout = "block" | "banner" | "inline";
@@ -43,7 +56,7 @@ export const DIRECTION_LAYOUTS: Record<DirectionId, DirectionLayout> = {
     testimonials: "grid",
     cta: "banner",
     heroPadding: "py-12 md:py-20",
-    sectionGap: "py-14 md:py-18",
+    sectionGap: "py-14 md:py-16",
     headlineScale: "text-4xl md:text-6xl font-black",
     ctaRounded: "rounded-lg",
   },
@@ -82,7 +95,7 @@ export const DIRECTION_LAYOUTS: Record<DirectionId, DirectionLayout> = {
     features: "bento",
     testimonials: "grid",
     cta: "banner",
-    heroPadding: "py-14 md:py-22",
+    heroPadding: "py-14 md:py-20",
     sectionGap: "py-14",
     headlineScale: "text-4xl md:text-5xl font-bold",
     ctaRounded: "rounded-2xl",

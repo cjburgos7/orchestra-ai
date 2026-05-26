@@ -10,7 +10,7 @@ import type {
 } from "@/lib/types/startup";
 import type { DirectionId } from "@/lib/types/startup";
 import { LayoutHomePage } from "./LayoutHomePage";
-import { InlineDashboardPreview, ImmersionStrip } from "./WebsiteVisuals";
+import { InlineDashboardPreview, ImmersionStrip, VisualGallery } from "./WebsiteVisuals";
 
 type PageProps = {
   brief: StartupBrief;
@@ -21,6 +21,7 @@ type PageProps = {
   isPreview: boolean;
   accentColor: string;
   onSectionJump?: (id: string) => void;
+  seed?: string;
 };
 
 export function HomePageContent({
@@ -30,6 +31,7 @@ export function HomePageContent({
   direction,
   isPreview,
   accentColor,
+  seed,
 }: PageProps) {
   return (
     <LayoutHomePage
@@ -40,11 +42,17 @@ export function HomePageContent({
       isPreview={isPreview}
       accentColor={accentColor}
       logo={sections.visuals?.logo}
+      seed={seed}
     />
   );
 }
 
-export function FeaturesPageContent({ sections, theme, isPreview }: Omit<PageProps, "brief" | "pages" | "direction" | "accentColor">) {
+export function FeaturesPageContent({
+  sections,
+  theme,
+  isPreview,
+  accentColor,
+}: Pick<PageProps, "sections" | "theme" | "isPreview" | "accentColor">) {
   return (
     <section className={`${isPreview ? "px-6 py-10" : "px-6 py-16 md:py-20"} ${theme.section}`}>
       <div className="max-w-4xl mx-auto text-center mb-12">
@@ -53,6 +61,11 @@ export function FeaturesPageContent({ sections, theme, isPreview }: Omit<PagePro
         </h1>
         <p className={`text-lg ${theme.heroSub}`}>Everything you need to succeed — built in from day one.</p>
       </div>
+      {sections.visuals && (
+        <div className="mb-12">
+          <VisualGallery visuals={sections.visuals} theme={theme} accentColor={accentColor} compact={isPreview} />
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
         {sections.features.items.map((item, i) => (
           <div key={i} className={`rounded-2xl p-6 ${theme.card}`}>
@@ -169,20 +182,26 @@ export function BlogPageContent({ pages, theme, isPreview }: Pick<PageProps, "pa
 
 export function DashboardPageContent({
   pages,
+  sections,
   theme,
   accentColor,
   isPreview,
-}: Pick<PageProps, "pages" | "theme" | "accentColor" | "isPreview">) {
+}: Pick<PageProps, "pages" | "sections" | "theme" | "accentColor" | "isPreview">) {
+  const visuals = sections.visuals;
+  const stats = visuals?.dashboardStats ?? pages.dashboard.stats;
+
   return (
     <section className={`${isPreview ? "px-6 py-10" : "px-6 py-16 md:py-20"} ${theme.section}`}>
       <div className="max-w-4xl mx-auto">
         <h1 className={`text-2xl font-bold mb-1 ${theme.heroText}`}>{pages.dashboard.headline}</h1>
         <p className={`text-sm mb-8 ${theme.heroSub}`}>{pages.dashboard.welcome}</p>
-        <InlineDashboardPreview theme={theme} stats={pages.dashboard.stats} accent={accentColor} />
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ImmersionStrip type="onboarding" theme={theme} accent={accentColor} />
-          <ImmersionStrip type="saas-panel" theme={theme} accent={accentColor} />
-        </div>
+        <InlineDashboardPreview theme={theme} stats={stats} accent={accentColor} />
+        {visuals && (
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ImmersionStrip visualId={visuals.featureVisual} theme={theme} accent={accentColor} />
+            <ImmersionStrip visualId={visuals.secondaryVisual} theme={theme} accent={accentColor} />
+          </div>
+        )}
       </div>
     </section>
   );
@@ -216,7 +235,14 @@ export function renderSitePage(
     case "home":
       return <HomePageContent {...props} />;
     case "features":
-      return <FeaturesPageContent sections={props.sections} theme={props.theme} isPreview={props.isPreview} />;
+      return (
+        <FeaturesPageContent
+          sections={props.sections}
+          theme={props.theme}
+          isPreview={props.isPreview}
+          accentColor={props.accentColor}
+        />
+      );
     case "pricing":
       return <PricingPageContent {...props} />;
     case "about":
@@ -229,6 +255,7 @@ export function renderSitePage(
       return (
         <DashboardPageContent
           pages={props.pages}
+          sections={props.sections}
           theme={props.theme}
           accentColor={props.accentColor}
           isPreview={props.isPreview}

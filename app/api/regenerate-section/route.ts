@@ -1,15 +1,9 @@
 import { NextResponse } from "next/server";
 import type { DirectionId, SectionKey } from "@/lib/types/startup";
+import { isValidDirection } from "@/lib/orchestration/directions";
 import { OrchestrationError } from "@/lib/orchestration/openai-client";
 import { runRegenerateSectionPipeline } from "@/lib/orchestration/pipelines/generate-sections";
 import { isGeneratedSections, isStartupBrief } from "@/lib/orchestration/validators";
-
-const VALID_DIRECTIONS: DirectionId[] = [
-  "orchestra",
-  "premium-dark",
-  "bold-experimental",
-  "minimal-clean",
-];
 
 const VALID_SECTIONS: SectionKey[] = [
   "navbar",
@@ -43,7 +37,7 @@ export async function POST(request: Request) {
   const direction = body.direction as DirectionId;
   const section = body.section as SectionKey;
 
-  if (!VALID_DIRECTIONS.includes(direction) || !VALID_SECTIONS.includes(section)) {
+  if (!isValidDirection(direction) || !VALID_SECTIONS.includes(section)) {
     return NextResponse.json({ error: "Invalid direction or section." }, { status: 400 });
   }
 

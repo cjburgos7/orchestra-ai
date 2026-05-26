@@ -1,6 +1,8 @@
 import type { StartupProject } from "@/lib/types/startup";
 import { uniqueSlug } from "@/lib/utils/slug";
-import { generatePages, generateVisuals } from "@/lib/orchestration/pipelines/generate-pages";
+import { generatePages } from "@/lib/orchestration/pipelines/generate-pages";
+import { buildProductVisualsSync } from "@/lib/orchestration/product-visuals";
+import { ensureImageryComplete } from "@/lib/orchestration/creative-imagery";
 import { pickWildcards } from "@/lib/orchestration/wildcards";
 import { briefFromProject } from "@/lib/types/startup";
 
@@ -75,12 +77,52 @@ export function migrateProject(project: StartupProject): StartupProject {
 
   let sections = project.generatedSections;
   const direction = project.selectedDirection ?? "orchestra";
+  const brief = briefFromProject(project);
   if (sections) {
-    const needsVisuals = !sections.visuals || !sections.visuals.logo;
+    const layout = sections.visuals?.layout;
+    const imagery = sections.visuals?.imagery;
+    const needsVisuals =
+      !sections.visuals ||
+      !sections.visuals.logo ||
+      !sections.visuals.productCategory ||
+      !sections.visuals.motion ||
+      !sections.visuals.layout ||
+      !sections.visuals.imagery ||
+      layout?.showCollections === undefined ||
+      layout?.imageFeatures === undefined ||
+      layout?.showPromo === undefined ||
+      layout?.showCategories === undefined ||
+      sections.visuals?.imageryOnly === undefined ||
+      !sections.visuals?.secondaryCategory ||
+      !sections.visuals?.visualWorld ||
+      !imagery?.hero?.startsWith("http") ||
+      !imagery?.products?.some((p) => p.image.startsWith("http")) ||
+      imagery?.heroFallback?.startsWith("linear-gradient") ||
+      imagery?.heroFallback?.startsWith("data:") ||
+      imagery?.lifestyleFallbacks?.some((u) => u.startsWith("data:")) ||
+      imagery?.products?.some((p) => p.imageFallback?.startsWith("data:")) ||
+      !imagery?.heroFallback ||
+      !imagery?.lifestyleFallbacks?.length ||
+      imagery?.products?.some((p) => !p.imageFallback);
+
     if (needsVisuals) {
       sections = {
         ...sections,
-        visuals: generateVisuals(briefFromProject(project), project.id, direction),
+        visuals: buildProductVisualsSync(brief, project.id, direction),
+      };
+    } else if (
+      imagery &&
+      (!imagery.hero?.startsWith("http") ||
+        !imagery.heroFallback?.startsWith("http") ||
+        !imagery.lifestyleFallbacks?.length ||
+        imagery.products.some((p) => !p.image.startsWith("http")))
+    ) {
+      sections = {
+        ...sections,
+        visuals: {
+          ...sections.visuals!,
+          imagery: ensureImageryComplete(imagery, brief, project.id, direction),
+        },
       };
     }
   }
