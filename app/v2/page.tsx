@@ -187,7 +187,7 @@ function Noise() {
   );
 }
 
-// ─── Jellyfish entity ─────────────────────────────────────────────────────────
+// ─── Jellyfish entity — cinematic bioluminescent creature ─────────────────────
 
 function Jellyfish({
   x, y, size, delay = 0, accentColor = C.accentSoft,
@@ -197,84 +197,215 @@ function Jellyfish({
   return (
     <motion.div
       className="absolute pointer-events-none"
-      style={{ left: x, top: y, width: size, height: size * 1.6 }}
-      animate={{ y: [0, -30, 0], rotateZ: [-3, 3, -3], scale: [0.96, 1.04, 0.96] }}
-      transition={{ duration: 9 + delay, repeat: Infinity, ease: "easeInOut", delay }}
+      style={{
+        left: x, top: y,
+        width: size, height: size * 1.75,
+        transform: "translateX(-50%)",
+      }}
+      animate={{ y: [0, -28, 0], rotateZ: [-2, 2, -2], scale: [0.97, 1.03, 0.97] }}
+      transition={{ duration: 10 + delay, repeat: Infinity, ease: "easeInOut", delay }}
     >
-      {/* Outer environmental glow — the creature as a light source */}
-      <div
-        style={{
-          position: "absolute",
-          top: "-30%",
-          left: "-30%",
-          width: "160%",
-          height: "160%",
-          borderRadius: "50%",
-          background: `radial-gradient(circle at 50% 40%, ${accentColor}22 0%, ${accentColor}0a 45%, transparent 70%)`,
-          pointerEvents: "none",
-        }}
-      />
-      {/* Bell */}
-      <motion.div
-        style={{
-          width: "100%",
-          height: "52%",
-          borderRadius: "50% 50% 38% 38%",
-          background: `radial-gradient(ellipse at 42% 32%, ${accentColor}cc 0%, ${accentColor}60 45%, ${accentColor}18 68%, transparent 80%)`,
-          border: `1px solid ${accentColor}60`,
-          boxShadow: `0 0 ${size * 0.7}px ${accentColor}55, 0 0 ${size * 0.35}px ${accentColor}30, inset 0 0 ${size * 0.4}px ${accentColor}28`,
-        }}
-        animate={{ scaleX: [1, 0.94, 1], scaleY: [1, 1.07, 1] }}
-        transition={{ duration: 3.2 + delay * 0.4, repeat: Infinity, ease: "easeInOut" }}
-      />
-      {/* Inner luminescence — bright core */}
+      {/* ── Vast outer environmental glow — creature as light source ── */}
       <motion.div
         style={{
           position: "absolute",
-          top: "6%",
-          left: "18%",
-          width: "64%",
-          height: "34%",
+          top: "-55%", left: "-55%",
+          width: "210%", height: "210%",
           borderRadius: "50%",
-          background: `radial-gradient(ellipse at 48% 38%, ${accentColor}ee 0%, ${accentColor}88 30%, ${accentColor}22 65%, transparent 80%)`,
+          background: `radial-gradient(circle at 50% 38%, ${accentColor}28 0%, ${accentColor}12 28%, ${accentColor}06 50%, transparent 68%)`,
         }}
-        animate={{ opacity: [0.7, 1, 0.7], scale: [0.88, 1.14, 0.88] }}
-        transition={{ duration: 2.6 + delay * 0.3, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ scale: [0.92, 1.08, 0.92], opacity: [0.7, 1, 0.7] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
-      {/* Tendril base glow */}
-      <div
+      {/* Mid-range luminescence halo */}
+      <div style={{
+        position: "absolute",
+        top: "-22%", left: "-22%",
+        width: "144%", height: "144%",
+        borderRadius: "50%",
+        background: `radial-gradient(circle at 50% 35%, ${accentColor}40 0%, ${accentColor}18 35%, transparent 58%)`,
+      }} />
+
+      {/* ── Outer translucent dome cap ── */}
+      <div style={{
+        position: "absolute",
+        width: "106%", height: "56%",
+        left: "-3%", top: 0,
+        borderRadius: "50% 50% 44% 44%",
+        background: `radial-gradient(ellipse at 44% 22%, ${accentColor}20 0%, ${accentColor}0a 48%, transparent 70%)`,
+        border: `1px solid ${accentColor}22`,
+      }} />
+
+      {/* ── Main bell — photorealistic depth layers ── */}
+      <motion.div
         style={{
           position: "absolute",
-          top: "46%",
-          left: "10%",
-          width: "80%",
-          height: "20%",
-          background: `radial-gradient(ellipse, ${accentColor}38 0%, transparent 70%)`,
+          width: "92%", height: "52%",
+          left: "4%", top: "2%",
+          borderRadius: "50% 50% 40% 40%",
+          background: `
+            radial-gradient(ellipse at 38% 22%,
+              rgba(255,255,255,0.92) 0%,
+              rgba(255,255,255,0.55) 5%,
+              ${accentColor}ff 10%,
+              ${accentColor}dd 20%,
+              ${accentColor}88 38%,
+              ${accentColor}40 58%,
+              ${accentColor}18 72%,
+              transparent 85%)
+          `,
+          border: `1px solid ${accentColor}75`,
+          boxShadow: `
+            0 0 ${size * 1.0}px ${accentColor}50,
+            0 0 ${size * 0.55}px ${accentColor}40,
+            0 0 ${size * 0.28}px ${accentColor}70,
+            inset 0 0 ${size * 0.55}px ${accentColor}38
+          `,
         }}
+        animate={{ scaleX: [1, 0.95, 1], scaleY: [1, 1.06, 1] }}
+        transition={{ duration: 3.4 + delay * 0.3, repeat: Infinity, ease: "easeInOut" }}
       />
-      {/* Tendrils */}
-      {Array.from({ length: 8 }).map((_, i) => (
+
+      {/* ── Bright inner luminescent core — white-hot heart ── */}
+      <motion.div
+        style={{
+          position: "absolute",
+          top: "4%", left: "24%",
+          width: "52%", height: "28%",
+          borderRadius: "50%",
+          background: `radial-gradient(ellipse at 46% 34%,
+            rgba(255,255,255,1) 0%,
+            rgba(255,255,255,0.85) 8%,
+            ${accentColor}ff 18%,
+            ${accentColor}cc 34%,
+            ${accentColor}50 60%,
+            transparent 78%)`,
+          filter: `blur(${size * 0.008}px)`,
+        }}
+        animate={{ opacity: [0.78, 1, 0.78], scale: [0.86, 1.16, 0.86] }}
+        transition={{ duration: 2.6 + delay * 0.2, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* ── Bioluminescent spots — scattered interior nodes ── */}
+      {Array.from({ length: 9 }).map((_, i) => (
         <motion.div
-          key={i}
+          key={`spot-${i}`}
+          style={{
+            position: "absolute",
+            width: Math.max(3, size * 0.022),
+            height: Math.max(3, size * 0.022),
+            borderRadius: "50%",
+            background: `radial-gradient(circle, rgba(255,255,255,0.95) 0%, ${accentColor} 50%, transparent 80%)`,
+            left: `${12 + (i % 5) * 16 + (i > 4 ? 6 : 0)}%`,
+            top: `${6 + Math.floor(i / 3) * 9}%`,
+            boxShadow: `0 0 ${size * 0.04}px rgba(255,255,255,0.9), 0 0 ${size * 0.07}px ${accentColor}`,
+          }}
+          animate={{ opacity: [0.45, 1, 0.45], scale: [0.7, 1.4, 0.7] }}
+          transition={{
+            duration: 1.4 + i * 0.28,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 0.18 + delay,
+          }}
+        />
+      ))}
+
+      {/* ── Bell rib structure — internal radial ribs ── */}
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div
+          key={`rib-${i}`}
+          style={{
+            position: "absolute",
+            width: 1,
+            height: "24%",
+            background: `linear-gradient(to bottom, transparent, ${accentColor}50, ${accentColor}28, transparent)`,
+            left: `${18 + i * 14}%`,
+            top: "14%",
+            transformOrigin: "top center",
+            transform: `rotate(${-16 + i * 8}deg)`,
+          }}
+        />
+      ))}
+
+      {/* ── Sub-umbrella / underdome fold ── */}
+      <div style={{
+        position: "absolute",
+        top: "48%", left: "8%",
+        width: "84%", height: "9%",
+        borderRadius: "50%",
+        background: `radial-gradient(ellipse, ${accentColor}60 0%, ${accentColor}30 45%, transparent 70%)`,
+        filter: `blur(${size * 0.006}px)`,
+      }} />
+
+      {/* ── Oral arms — thick branching appendages ── */}
+      {[0.18, 0.38, 0.62, 0.82].map((pos, i) => (
+        <motion.div
+          key={`arm-${i}`}
+          style={{
+            position: "absolute",
+            width: Math.max(2, size * 0.022 - i * size * 0.003),
+            height: size * (0.22 + i * 0.03),
+            background: `linear-gradient(to bottom,
+              ${accentColor}d0,
+              ${accentColor}80,
+              ${accentColor}38,
+              ${accentColor}12,
+              transparent)`,
+            left: `${pos * 100}%`,
+            top: "50%",
+            transformOrigin: "top center",
+            borderRadius: size * 0.01,
+          }}
+          animate={{
+            rotateZ: [(-6 + i * 2), (6 - i * 2), (-6 + i * 2)],
+            scaleY: [0.93, 1.07, 0.93],
+          }}
+          transition={{
+            duration: 3.2 + i * 0.6,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 0.35 + delay,
+          }}
+        />
+      ))}
+
+      {/* ── Tendril base glow pool ── */}
+      <div style={{
+        position: "absolute",
+        top: "50%", left: "6%",
+        width: "88%", height: "14%",
+        background: `radial-gradient(ellipse, ${accentColor}45 0%, ${accentColor}20 50%, transparent 72%)`,
+        filter: `blur(${size * 0.008}px)`,
+      }} />
+
+      {/* ── Tendrils — 20 fine bioluminescent filaments ── */}
+      {Array.from({ length: 20 }).map((_, i) => (
+        <motion.div
+          key={`t-${i}`}
           className="absolute"
           style={{
-            width: 1.5 + (i % 2) * 0.5,
-            height: size * (0.42 + (i % 4) * 0.12),
-            background: `linear-gradient(to bottom, ${accentColor}88, ${accentColor}38, ${accentColor}10, transparent)`,
-            left: `${8 + i * 11}%`,
-            top: "49%",
+            width: Math.max(0.8, 1.2 + (i % 3) * 0.4),
+            height: size * (0.30 + (i % 6) * 0.11),
+            background: `linear-gradient(to bottom,
+              ${accentColor}95,
+              ${accentColor}60,
+              ${accentColor}28,
+              ${accentColor}0d,
+              transparent)`,
+            left: `${2 + i * 4.9}%`,
+            top: "52%",
             transformOrigin: "top center",
             borderRadius: 2,
           }}
           animate={{
-            rotateZ: [-12 + i * 2.5, 12 - i * 2.5, -12 + i * 2.5],
-            scaleY: [0.85, 1.15, 0.85],
+            rotateZ: [-13 + i * 1.3, 13 - i * 1.3, -13 + i * 1.3],
+            scaleY: [0.84, 1.16, 0.84],
           }}
           transition={{
-            duration: 2.4 + i * 0.4,
+            duration: 2.1 + i * 0.32,
             repeat: Infinity,
             ease: "easeInOut",
-            delay: i * 0.16 + delay,
+            delay: i * 0.11 + delay,
           }}
         />
       ))}
@@ -404,60 +535,122 @@ function NebulaField({ isDark }: { isDark: boolean }) {
     <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 1 }}>
       {isDark ? (
         <>
+          {/* ── Primary purple/violet nebula mass — center-right ── */}
           <motion.div
             className="absolute"
             style={{
-              width: "95%", height: "88%",
-              top: "-18%", right: "-8%",
+              width: "90%", height: "85%",
+              top: "-10%", right: "-5%",
               background: `
-                radial-gradient(ellipse 60% 52% at 52% 36%,
-                  rgba(124,58,237,0.58) 0%,
-                  rgba(76,29,149,0.36) 22%,
-                  rgba(6,182,212,0.16) 52%,
+                radial-gradient(ellipse 62% 55% at 50% 40%,
+                  rgba(124,58,237,0.72) 0%,
+                  rgba(109,40,217,0.52) 18%,
+                  rgba(76,29,149,0.36) 35%,
+                  rgba(139,92,246,0.20) 55%,
                   transparent 72%),
-                radial-gradient(ellipse 48% 58% at 82% 58%,
-                  rgba(6,182,212,0.30) 0%,
-                  rgba(8,145,178,0.16) 38%,
-                  transparent 65%)
+                radial-gradient(ellipse 45% 55% at 80% 55%,
+                  rgba(167,139,250,0.45) 0%,
+                  rgba(124,58,237,0.28) 35%,
+                  transparent 62%)
               `,
-              borderRadius: "42%",
+              borderRadius: "44%",
+              filter: "blur(2px)",
             }}
-            animate={{ scale: [1, 1.04, 1], opacity: [0.82, 1, 0.82] }}
+            animate={{ scale: [1, 1.04, 1], opacity: [0.85, 1, 0.85] }}
             transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
           />
+
+          {/* ── Deep violet secondary volume ── */}
           <motion.div
             className="absolute"
             style={{
-              width: "62%", height: "72%",
-              top: "8%", right: "4%",
-              background: `radial-gradient(ellipse at 50% 38%,
-                rgba(139,92,246,0.38) 0%,
-                rgba(99,102,241,0.20) 32%,
+              width: "65%", height: "78%",
+              top: "5%", right: "2%",
+              background: `radial-gradient(ellipse at 48% 36%,
+                rgba(139,92,246,0.48) 0%,
+                rgba(99,102,241,0.28) 28%,
+                rgba(79,70,229,0.14) 52%,
+                transparent 68%)`,
+              borderRadius: "50%",
+              filter: "blur(32px)",
+            }}
+            animate={{ opacity: [0.58, 0.92, 0.58], scale: [0.93, 1.07, 0.93] }}
+            transition={{ duration: 24, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+          />
+
+          {/* ── Cyan accent vein — upper left of nebula ── */}
+          <motion.div
+            className="absolute"
+            style={{
+              width: "48%", height: "50%",
+              top: "18%", right: "28%",
+              background: `radial-gradient(ellipse at 55% 40%,
+                rgba(6,182,212,0.30) 0%,
+                rgba(14,165,233,0.16) 40%,
                 transparent 62%)`,
               borderRadius: "50%",
-              filter: "blur(28px)",
+              filter: "blur(22px)",
             }}
-            animate={{ opacity: [0.55, 0.88, 0.55], scale: [0.93, 1.07, 0.93] }}
-            transition={{ duration: 22, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+            animate={{ opacity: [0.42, 0.72, 0.42] }}
+            transition={{ duration: 16, repeat: Infinity, ease: "easeInOut", delay: 8 }}
           />
+
+          {/* ── ORANGE/AMBER nebula accent — top right corner (matches reference) ── */}
           <motion.div
             className="absolute"
             style={{
-              width: "52%", height: "48%",
-              top: "22%", right: "18%",
-              background: `radial-gradient(ellipse at 58% 42%,
-                rgba(6,182,212,0.26) 0%,
-                rgba(14,165,233,0.13) 43%,
-                transparent 63%)`,
-              borderRadius: "50%",
+              width: "50%", height: "52%",
+              top: "-18%", right: "-12%",
+              background: `
+                radial-gradient(ellipse 62% 58% at 42% 48%,
+                  rgba(251,146,60,0.42) 0%,
+                  rgba(249,115,22,0.28) 22%,
+                  rgba(234,88,12,0.16) 45%,
+                  rgba(194,65,12,0.08) 62%,
+                  transparent 78%)
+              `,
+              borderRadius: "38%",
+              filter: "blur(28px)",
+            }}
+            animate={{ opacity: [0.65, 1, 0.65], scale: [0.94, 1.06, 0.94] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          />
+
+          {/* ── Warm amber secondary — top-right edge ── */}
+          <motion.div
+            className="absolute"
+            style={{
+              width: "35%", height: "38%",
+              top: "-8%", right: "-5%",
+              background: `radial-gradient(ellipse at 50% 50%,
+                rgba(253,186,116,0.30) 0%,
+                rgba(251,146,60,0.18) 35%,
+                transparent 62%)`,
               filter: "blur(20px)",
             }}
-            animate={{ opacity: [0.45, 0.75, 0.45] }}
-            transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 8 }}
+            animate={{ opacity: [0.5, 0.85, 0.5] }}
+            transition={{ duration: 11, repeat: Infinity, ease: "easeInOut", delay: 5 }}
+          />
+
+          {/* ── Deep magenta haze — between purple and orange ── */}
+          <motion.div
+            className="absolute"
+            style={{
+              width: "38%", height: "42%",
+              top: "0%", right: "22%",
+              background: `radial-gradient(ellipse at 50% 50%,
+                rgba(192,38,211,0.22) 0%,
+                rgba(162,28,175,0.12) 45%,
+                transparent 68%)`,
+              filter: "blur(18px)",
+            }}
+            animate={{ opacity: [0.45, 0.78, 0.45] }}
+            transition={{ duration: 13, repeat: Infinity, ease: "easeInOut", delay: 3 }}
           />
         </>
       ) : (
         <>
+          {/* Light mode: luminous celestial volumes */}
           <motion.div
             className="absolute"
             style={{
@@ -601,6 +794,93 @@ function AtmosphericFog({ isDark }: { isDark: boolean }) {
         />
       ))}
     </div>
+  );
+}
+
+// ─── Floating world — planetary sphere entity ────────────────────────────────
+
+function FloatingWorld({ x, y, size, accentColor, delay = 0 }: {
+  x: string; y: string; size: number; accentColor: string; delay?: number;
+}) {
+  return (
+    <motion.div
+      className="absolute pointer-events-none"
+      style={{
+        left: x, top: y,
+        width: size, height: size,
+        transform: "translate(-50%, -50%)",
+      }}
+      animate={{ y: [0, -18, 0], rotateZ: [-1.5, 1.5, -1.5] }}
+      transition={{ duration: 14 + delay, repeat: Infinity, ease: "easeInOut", delay }}
+    >
+      {/* Vast outer atmospheric haze */}
+      <div style={{
+        position: "absolute",
+        inset: `-${size * 0.8}px`,
+        borderRadius: "50%",
+        background: `radial-gradient(circle, ${accentColor}25 0%, ${accentColor}0e 32%, transparent 58%)`,
+      }} />
+      {/* Mid atmospheric glow */}
+      <motion.div
+        style={{
+          position: "absolute",
+          inset: `-${size * 0.38}px`,
+          borderRadius: "50%",
+          background: `radial-gradient(circle, ${accentColor}48 0%, ${accentColor}22 38%, transparent 65%)`,
+        }}
+        animate={{ scale: [0.88, 1.12, 0.88], opacity: [0.65, 1, 0.65] }}
+        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+      />
+      {/* Planet sphere — photorealistic depth gradient */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        borderRadius: "50%",
+        background: `
+          radial-gradient(circle at 34% 26%,
+            rgba(255,255,255,0.18) 0%,
+            ${accentColor}ff 6%,
+            ${accentColor}dd 18%,
+            ${accentColor}99 32%,
+            ${accentColor}55 50%,
+            ${accentColor}28 68%,
+            #0a0520 84%,
+            #050310 100%)
+        `,
+        boxShadow: `
+          0 0 ${size * 0.7}px ${accentColor}55,
+          0 0 ${size * 0.35}px ${accentColor}42,
+          inset -${size * 0.14}px -${size * 0.07}px ${size * 0.2}px rgba(0,0,0,0.75)
+        `,
+      }} />
+      {/* Atmospheric rim glow */}
+      <motion.div
+        style={{
+          position: "absolute",
+          inset: `-${size * 0.04}px`,
+          borderRadius: "50%",
+          border: `${Math.max(1, size * 0.016)}px solid ${accentColor}78`,
+          boxShadow: `
+            0 0 ${size * 0.28}px ${accentColor}50,
+            inset 0 0 ${size * 0.08}px ${accentColor}28
+          `,
+        }}
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+      />
+      {/* Orbital ring — thin perspective ellipse */}
+      <div style={{
+        position: "absolute",
+        width: "175%",
+        height: "32%",
+        left: "-37.5%",
+        top: "34%",
+        borderRadius: "50%",
+        border: `1px solid ${accentColor}42`,
+        boxShadow: `0 0 6px ${accentColor}28`,
+        transform: "rotateX(76deg)",
+      }} />
+    </motion.div>
   );
 }
 
@@ -903,16 +1183,18 @@ function CinematicHero() {
         className="absolute inset-0 overflow-hidden pointer-events-none"
         style={{ x: jfMoveX, y: jfMoveY, zIndex: 2 }}
       >
-        {/* MASSIVE primary — dominant centerpiece, upper right */}
-        <Jellyfish x="62%"  y="-14%" size={680} delay={0}   accentColor={jfColors.primary} />
-        {/* Mid companion — meaningful scale, right side */}
-        <Jellyfish x="86%"  y="42%"  size={260} delay={3.2} accentColor={jfColors.secondary} />
-        {/* Lower ambient — left of center, subtle depth */}
-        <Jellyfish x="40%"  y="60%"  size={148} delay={6.2} accentColor={jfColors.tertiary} />
-        {/* Far-right whisper */}
-        <Jellyfish x="95%"  y="5%"   size={92}  delay={1.6} accentColor={jfColors.small} />
-        {/* Deep background — atmospheric layer */}
-        <Jellyfish x="74%"  y="76%"  size={72}  delay={8.0} accentColor={jfColors.tiny} />
+        {/* MASSIVE primary — bell CENTER at 65% of viewport, visible upper right */}
+        <Jellyfish x="65%"  y="-6%"  size={960} delay={0}   accentColor={jfColors.primary} />
+        {/* Mid companion — right-edge depth anchor */}
+        <Jellyfish x="85%"  y="44%"  size={290} delay={3.2} accentColor={jfColors.secondary} />
+        {/* Lower ambient — left field, depth */}
+        <Jellyfish x="36%"  y="58%"  size={152} delay={6.2} accentColor={jfColors.tertiary} />
+        {/* Far-right edge whisper */}
+        <Jellyfish x="97%"  y="5%"   size={96}  delay={1.6} accentColor={jfColors.small} />
+        {/* Deep background atmospheric creature */}
+        <Jellyfish x="76%"  y="80%"  size={74}  delay={8.0} accentColor={jfColors.tiny} />
+        {/* Floating world — planetary sphere below primary jellyfish */}
+        <FloatingWorld x="69%" y="58%" size={190} accentColor={jfColors.primary} delay={2} />
       </motion.div>
 
       {/* ── LAYER 4.5: Atmospheric fog — translucent depth planes ──────────── */}
@@ -1267,14 +1549,26 @@ const TOOLS_POS: ToolEntry[] = TOOLS.map((tool) => {
   return { ...tool, px: x, py: y };
 });
 
+// Remap near-white tool colors to readable values in light mode
+const NEAR_WHITE_TOOLS = new Set(["#e8e8e8", "#c9d1d9", "#e4e4e7"]);
+function resolveEcosystemColor(raw: string, theme: Theme): string {
+  if (theme === "light" && NEAR_WHITE_TOOLS.has(raw.toLowerCase())) {
+    return "#475569"; // slate-600 — readable on any light surface
+  }
+  return raw;
+}
+
 function EcosystemNode({
   tool, active, onClick,
 }: {
   tool: ToolEntry; active: boolean; onClick: () => void;
 }) {
+  const { theme } = useTheme();
   const T = useTokens();
+  const isDark = theme === "dark";
   const cx = tool.px;
   const cy = tool.py;
+  const color = resolveEcosystemColor(tool.color, theme);
 
   return (
     <motion.button
@@ -1300,26 +1594,34 @@ function EcosystemNode({
         style={{
           width:  active ? 52 : 44,
           height: active ? 52 : 44,
-          background: `radial-gradient(circle at 40% 40%, ${tool.color}42 0%, ${tool.color}14 60%, transparent)`,
-          border: `1px solid ${tool.color}${active ? "80" : "35"}`,
+          background: isDark
+            ? `radial-gradient(circle at 40% 40%, ${color}42 0%, ${color}14 60%, transparent)`
+            : `rgba(255,255,255,0.72)`,
+          border: `1.5px solid ${color}${active ? (isDark ? "88" : "70") : (isDark ? "40" : "55")}`,
           boxShadow: active
-            ? `0 0 28px ${tool.color}55, 0 0 8px ${tool.color}28`
-            : `0 0 6px ${tool.color}1c`,
+            ? `0 0 24px ${color}55, 0 0 8px ${color}28`
+            : isDark
+              ? `0 0 6px ${color}20`
+              : `0 0 10px ${color}28, inset 0 0 8px ${color}10`,
+          backdropFilter: isDark ? "none" : "blur(4px)",
         }}
         animate={
           active
-            ? { boxShadow: [`0 0 28px ${tool.color}55`, `0 0 50px ${tool.color}78`, `0 0 28px ${tool.color}55`] }
+            ? { boxShadow: [`0 0 24px ${color}55`, `0 0 44px ${color}78`, `0 0 24px ${color}55`] }
             : {}
         }
         transition={{ duration: 2, repeat: Infinity }}
       >
-        <span className="font-black text-[8px] tracking-widest" style={{ color: tool.color }}>
+        <span className="font-black text-[8px] tracking-widest" style={{ color }}>
           {tool.tag}
         </span>
       </motion.div>
       <span
         className="text-[8px] font-semibold uppercase tracking-wide whitespace-nowrap"
-        style={{ color: active ? tool.color : T.muted, opacity: active ? 1 : 0.6 }}
+        style={{
+          color: active ? color : (isDark ? T.muted : color),
+          opacity: active ? 1 : (isDark ? 0.6 : 0.88),
+        }}
       >
         {tool.name}
       </span>
