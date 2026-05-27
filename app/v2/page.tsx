@@ -122,6 +122,43 @@ function img(id: string, w: number, h: number) {
   return `https://images.unsplash.com/photo-${id}?ixlib=rb-4.0.3&auto=format&fit=crop&w=${w}&h=${h}&q=85`;
 }
 
+// ─── World variant data ───────────────────────────────────────────────────────
+
+type VariantKey = "synthera" | "aurelia" | "lumina";
+
+const VARIANTS = [
+  {
+    key: "synthera" as VariantKey,
+    num: "01",
+    name: "SYNTHERA",
+    desc: "Deep · Premium · Metallic",
+    accent: "#7c3aed",
+    glow: "rgba(80,40,200,0.50)",
+    cardBg: "#0c0918",
+    objectSrc: "/hero-object.webp" as string | null,
+  },
+  {
+    key: "aurelia" as VariantKey,
+    num: "02",
+    name: "AURELIA",
+    desc: "Soft · Ethereal · Wellness",
+    accent: "#a855f7",
+    glow: "rgba(168,85,247,0.45)",
+    cardBg: "#110820",
+    objectSrc: null as string | null,
+  },
+  {
+    key: "lumina" as VariantKey,
+    num: "03",
+    name: "LUMINA",
+    desc: "Minimal · Heavenly · White",
+    accent: "#7dd3fc",
+    glow: "rgba(147,210,255,0.40)",
+    cardBg: "#f0f7ff",
+    objectSrc: null as string | null,
+  },
+] as const;
+
 // ─── Theme ────────────────────────────────────────────────────────────────────
 
 type Theme = "dark" | "light";
@@ -525,6 +562,39 @@ function Particles({ count = 28 }: { count?: number }) {
         );
       })}
     </div>
+  );
+}
+
+// ─── Orbital chrome sphere — premium object companion ────────────────────────
+
+function OrbitalSphere({
+  orbitPx, spherePx, period, startDeg, isDark, reverse = false,
+}: {
+  orbitPx: number; spherePx: number; period: number;
+  startDeg: number; isDark: boolean; reverse?: boolean;
+}) {
+  return (
+    <motion.div
+      style={{ position: "absolute", left: "50%", top: "42%", width: 0, height: 0, transformOrigin: "0 0" }}
+      initial={{ rotate: startDeg }}
+      animate={{ rotate: reverse ? startDeg - 360 : startDeg + 360 }}
+      transition={{ duration: period, repeat: Infinity, ease: "linear" }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          width: spherePx,
+          height: spherePx,
+          left: -spherePx / 2,
+          top: -orbitPx,
+          borderRadius: "50%",
+          background: "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.97) 0%, rgba(210,210,232,0.78) 28%, rgba(140,128,185,0.55) 58%, rgba(18,14,38,0.96) 100%)",
+          boxShadow: isDark
+            ? `0 0 ${spherePx * 2.2}px rgba(120,80,220,0.17), 0 ${spherePx * 0.6}px ${spherePx * 1.4}px rgba(0,0,0,0.60)`
+            : `0 0 ${spherePx * 2.2}px rgba(80,160,240,0.13), 0 ${spherePx * 0.6}px ${spherePx * 1.4}px rgba(0,0,0,0.20)`,
+        }}
+      />
+    </motion.div>
   );
 }
 
@@ -1029,209 +1099,154 @@ function V2Nav() {
   );
 }
 
-// ─── Section 1: Cinematic Hero — environment-dominant ─────────────────────────
+// ─── Section 1: Cinematic Hero — premium minimal object showcase ──────────────
 
 function CinematicHero() {
   const { theme } = useTheme();
   const T = useTokens();
   const isDark = theme === "dark";
 
-  const heroRef  = useRef<HTMLElement>(null);
-  const mouseX   = useMotionValue(0);
-  const mouseY   = useMotionValue(0);
-  const smoothX  = useSpring(mouseX, { stiffness: 48, damping: 18 });
-  const smoothY  = useSpring(mouseY, { stiffness: 48, damping: 18 });
+  const heroRef = useRef<HTMLElement>(null);
+  const mouseX  = useMotionValue(0);
+  const mouseY  = useMotionValue(0);
+  const smoothX = useSpring(mouseX, { stiffness: 50, damping: 18 });
+  const smoothY = useSpring(mouseY, { stiffness: 50, damping: 18 });
 
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"],
   });
 
-  const [heroBgFailed, setHeroBgFailed] = useState(false);
-
-  // Background parallax — deep, slow
-  const bgY         = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const bgScale     = useTransform(scrollYProgress, [0, 1], [1.08, 1.0]);
-  // Text lifts and fades on scroll
-  const contentY    = useTransform(scrollYProgress, [0, 1], ["0%", "-16%"]);
-  const contentFade = useTransform(scrollYProgress, [0, 0.68], [1, 0]);
-  // Mouse parallax — orbs move more, jellyfish moves subtly
-  const orbMoveX    = useTransform(smoothX, [-0.5, 0.5], [-70, 70]);
-  const orbMoveY    = useTransform(smoothY, [-0.5, 0.5], [-46, 46]);
-  const jfMoveX     = useTransform(smoothX, [-0.5, 0.5], [-22, 22]);
-  const jfMoveY     = useTransform(smoothY, [-0.5, 0.5], [-16, 16]);
+  const contentY    = useTransform(scrollYProgress, [0, 1], ["0%", "-14%"]);
+  const contentFade = useTransform(scrollYProgress, [0, 0.72], [1, 0]);
+  const objMoveX    = useTransform(smoothX, [-0.5, 0.5], [-18, 18]);
+  const objMoveY    = useTransform(smoothY, [-0.5, 0.5], [-12, 12]);
 
   const heroVariants = {
     hidden: {},
-    visible: { transition: { staggerChildren: 0.14, delayChildren: 0.6 } },
+    visible: { transition: { staggerChildren: 0.12, delayChildren: 0.55 } },
   };
   const item = {
-    hidden:  { opacity: 0, y: 52 },
-    visible: { opacity: 1, y: 0, transition: { duration: 1.2, ease: E.expo as any } },
+    hidden:  { opacity: 0, y: 40 },
+    visible: { opacity: 1, y: 0, transition: { duration: 1.1, ease: E.expo as any } },
   };
 
-  // Jellyfish colours adapt to mode
-  const jfColors = isDark
-    ? {
-        primary:   C.accentSoft,
-        secondary: "rgba(6,182,212,0.92)",
-        tertiary:  C.gold,
-        small:     `${C.accent}90`,
-        tiny:      "rgba(6,182,212,0.60)",
-      }
-    : {
-        primary:   "rgba(100,195,255,0.90)",
-        secondary: "rgba(80,180,255,0.82)",
-        tertiary:  "rgba(147,210,255,0.74)",
-        small:     "rgba(56,189,248,0.62)",
-        tiny:      "rgba(160,220,255,0.50)",
-      };
+  const heroBg = isDark ? "#08080f" : "#f0f4f9";
+  const glowBg = isDark
+    ? "radial-gradient(ellipse 75% 70% at 68% 50%, rgba(55,25,135,0.55) 0%, rgba(20,10,48,0.28) 48%, transparent 72%)"
+    : "radial-gradient(ellipse 75% 70% at 68% 50%, rgba(186,230,253,0.65) 0%, rgba(224,242,254,0.38) 48%, transparent 72%)";
 
   return (
     <motion.section
       ref={heroRef as React.RefObject<HTMLElement>}
       className="relative overflow-hidden"
-      style={{ height: "100svh", minHeight: "640px" }}
+      style={{ height: "100svh", minHeight: "640px", background: heroBg }}
       onMouseMove={(e) => {
         const r = e.currentTarget.getBoundingClientRect();
-        mouseX.set((e.clientX - r.left) / r.width  - 0.5);
+        mouseX.set((e.clientX - r.left) / r.width - 0.5);
         mouseY.set((e.clientY - r.top)  / r.height - 0.5);
       }}
     >
-      {/* ── LAYER 1: Deep world background ─────────────────────────────────── */}
-      {isDark ? (
+      {/* Background atmosphere */}
+      <div className="absolute inset-0" style={{ background: glowBg }} />
+
+      {/* Premium central object — right half */}
+      <motion.div
+        className="absolute pointer-events-none"
+        style={{
+          right: "-4%",
+          top: "50%",
+          translateY: "-50%",
+          width: "min(60vw, 780px)",
+          height: "min(60vw, 780px)",
+          x: objMoveX,
+          y: objMoveY,
+          zIndex: 2,
+        }}
+      >
+        {/* Deep glow field behind object */}
+        <div style={{
+          position: "absolute", inset: "-18%", borderRadius: "50%", filter: "blur(40px)",
+          background: isDark
+            ? "radial-gradient(circle at 50% 50%, rgba(72,38,210,0.26) 0%, rgba(36,18,108,0.13) 45%, transparent 68%)"
+            : "radial-gradient(circle at 50% 50%, rgba(147,210,255,0.32) 0%, rgba(186,230,253,0.16) 45%, transparent 68%)",
+        }} />
+
+        {/* Generated cinematic object */}
         <motion.div
-          className="absolute inset-0"
-          style={{ y: bgY, scale: bgScale }}
+          style={{ position: "absolute", inset: 0 }}
+          initial={{ opacity: 0, scale: 0.88 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.8, ease: E.expo as any, delay: 0.25 }}
         >
-          {heroBgFailed ? (
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `
-                  radial-gradient(ellipse 140% 95% at 68% 38%, rgba(124,58,237,0.72) 0%, rgba(76,29,149,0.42) 28%, transparent 55%),
-                  radial-gradient(ellipse 85% 75% at 24% 72%, rgba(6,182,212,0.40) 0%, transparent 52%),
-                  radial-gradient(ellipse 120% 110% at 92% 10%, rgba(139,92,246,0.38) 0%, rgba(99,102,241,0.20) 30%, transparent 55%),
-                  radial-gradient(ellipse 70% 60% at 50% 88%, rgba(6,182,212,0.22) 0%, transparent 50%),
-                  ${C.bg}
-                `,
-              }}
-            />
-          ) : (
+          <motion.div
+            style={{ position: "absolute", inset: 0 }}
+            animate={{ y: [0, -16, 0] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+          >
             <Image
-              src="/hero-world.webp"
-              alt="Cinematic cosmos environment"
+              src="/hero-object.webp"
+              alt="Synthera — cinematic world object"
               fill
-              className="object-cover"
+              className="object-contain"
               priority
-              style={{ opacity: 1.0 }}
-              onError={() => setHeroBgFailed(true)}
+              style={{ opacity: isDark ? 1 : 0.82 }}
             />
-          )}
+          </motion.div>
         </motion.div>
-      ) : (
-        /* Light mode: celestial heavenly sky */
-        <div className="absolute inset-0">
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `
-                radial-gradient(ellipse 130% 80% at 65% 0%, rgba(186,230,253,0.90) 0%, rgba(147,210,255,0.55) 28%, transparent 55%),
-                radial-gradient(ellipse 90% 100% at 90% 50%, rgba(224,242,254,0.80) 0%, rgba(186,230,253,0.40) 40%, transparent 65%),
-                radial-gradient(ellipse 110% 70% at 15% 70%, rgba(240,249,255,0.60) 0%, rgba(224,242,254,0.28) 45%, transparent 68%),
-                linear-gradient(to bottom, #f0f8ff 0%, #e8f4fc 38%, #f0f6ff 72%, #f5f8fd 100%)
-              `,
-            }}
-          />
-        </div>
-      )}
 
-      {/* ── LAYER 1.5: Nebula field — light mode only (dark uses generated image) */}
-      {!isDark && <NebulaField isDark={false} />}
+        {/* Orbital chrome spheres */}
+        <OrbitalSphere orbitPx={290} spherePx={22} period={10}  startDeg={0}   isDark={isDark} />
+        <OrbitalSphere orbitPx={340} spherePx={14} period={15}  startDeg={140} isDark={isDark} reverse />
+        <OrbitalSphere orbitPx={250} spherePx={18} period={7.5} startDeg={260} isDark={isDark} />
 
-      {/* ── LAYER 2: Star field (dark) / light rays (light) ─────────────────── */}
-      {isDark ? <StarField count={80} /> : <LightRays />}
-
-      {/* ── LAYER 3: Atmospheric glow orbs (mouse-reactive) ─────────────────── */}
-      <motion.div
-        className="absolute inset-0 overflow-hidden"
-        style={{ x: orbMoveX, y: orbMoveY, zIndex: 1 }}
-      >
-        {isDark ? (
-          /* Dark: subtle mouse-reactive shimmer on top of generated image */
-          <>
-            <Orb color={`${C.accent}22`}       size={900}  x="18%"  y="30%"  dur={14} delay={0} />
-            <Orb color="rgba(6,182,212,0.14)"  size={600}  x="75%"  y="12%"  dur={18} delay={2} />
-          </>
-        ) : (
-          <>
-            <Orb color="rgba(56,189,248,0.30)"   size={980}  x="22%"  y="20%"  dur={14} delay={0} />
-            <Orb color="rgba(147,210,255,0.25)"  size={760}  x="74%"  y="8%"   dur={18} delay={2} />
-            <Orb color="rgba(186,230,253,0.20)"  size={540}  x="88%"  y="62%"  dur={12} delay={4} />
-            <Orb color="rgba(224,242,254,0.28)"  size={440}  x="40%"  y="80%"  dur={22} delay={1} />
-          </>
-        )}
+        {/* Ground reflection */}
+        <div style={{
+          position: "absolute", bottom: "4%", left: "18%", right: "18%",
+          height: 50, filter: "blur(14px)",
+          background: isDark
+            ? "radial-gradient(ellipse at 50% 100%, rgba(72,38,210,0.18) 0%, transparent 70%)"
+            : "radial-gradient(ellipse at 50% 100%, rgba(147,210,255,0.20) 0%, transparent 70%)",
+        }} />
       </motion.div>
 
-      {/* ── LAYER 3.5: Celestial glow — light mode only ───────────────────────── */}
-      {!isDark && <CelestialGlow isDark={false} />}
-
-      {/* ── LAYER 4: GIANT jellyfish environment (subtle mouse parallax) ─────── */}
-      <motion.div
-        className="absolute inset-0 overflow-hidden pointer-events-none"
-        style={{ x: jfMoveX, y: jfMoveY, zIndex: 2 }}
-      >
-        {/* MASSIVE primary — bell CENTER at 65% of viewport, visible upper right */}
-        <Jellyfish x="65%"  y="-6%"  size={960} delay={0}   accentColor={jfColors.primary} />
-        {/* Mid companion — right-edge depth anchor */}
-        <Jellyfish x="85%"  y="44%"  size={290} delay={3.2} accentColor={jfColors.secondary} />
-        {/* Lower ambient — left field, depth */}
-        <Jellyfish x="36%"  y="58%"  size={152} delay={6.2} accentColor={jfColors.tertiary} />
-        {/* Far-right edge whisper */}
-        <Jellyfish x="97%"  y="5%"   size={96}  delay={1.6} accentColor={jfColors.small} />
-        {/* Deep background atmospheric creature */}
-        <Jellyfish x="76%"  y="80%"  size={74}  delay={8.0} accentColor={jfColors.tiny} />
-        {/* Floating world — planetary sphere below primary jellyfish */}
-        <FloatingWorld x="69%" y="58%" size={190} accentColor={jfColors.primary} delay={2} />
-      </motion.div>
-
-      {/* ── LAYER 4.5: Atmospheric fog — light mode only ─────────────────────── */}
-      {!isDark && <AtmosphericFog isDark={false} />}
-
-      {/* ── LAYER 5: Text readability vignette ───────────────────────────────── */}
+      {/* Left text-readability vignette */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
+          zIndex: 3,
           background: isDark
-            ? /* Dark: left-side vignette only — image handles the rest */
-              `linear-gradient(to right, ${C.bg}f0 0%, ${C.bg}a0 28%, ${C.bg}30 55%, transparent 78%),
-               linear-gradient(to top, ${C.bg}c0 0%, ${C.bg}40 22%, transparent 42%)`
-            : /* Light: full cinematic edges */
-              `linear-gradient(to right, ${T.bg}ee 0%, ${T.bg}80 26%, ${T.bg}20 60%, transparent 100%),
-               linear-gradient(to top, ${T.bg}e0 0%, ${T.bg}48 26%, transparent 50%),
-               linear-gradient(to bottom, ${T.bg}55 0%, transparent 18%)`,
-          zIndex: 5,
+            ? "linear-gradient(to right, rgba(8,8,15,1) 0%, rgba(8,8,15,0.88) 30%, rgba(8,8,15,0.38) 54%, transparent 74%)"
+            : `linear-gradient(to right, ${T.bg} 0%, ${T.bg}e8 28%, ${T.bg}55 52%, transparent 72%)`,
+        }}
+        aria-hidden
+      />
+      {/* Bottom vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          zIndex: 3,
+          background: isDark
+            ? "linear-gradient(to top, rgba(8,8,15,0.55) 0%, rgba(8,8,15,0.08) 24%, transparent 40%)"
+            : `linear-gradient(to top, ${T.bg}80 0%, transparent 28%)`,
         }}
         aria-hidden
       />
 
-      {/* ── LAYER 6: Architectural grid (removed for dark — generated image is primary) */}
+      {/* Sparse ambient particles */}
+      <Particles count={isDark ? 14 : 8} />
 
-      {/* ── LAYER 7: Floating particles ─────────────────────────────────────── */}
-      <div style={{ position: "absolute", inset: 0, zIndex: 7, pointerEvents: "none" }}>
-        <Particles count={isDark ? 32 : 20} />
-      </div>
-
-      {/* ── LAYER 8: Film grain ─────────────────────────────────────────────── */}
+      {/* Film grain */}
       <Noise />
 
-      {/* ── LAYER 9: Typography — overlaid bottom zone ──────────────────────── */}
+      {/* Typography — bottom-left */}
       <motion.div
-        className="absolute inset-0 z-20 flex flex-col justify-end"
+        className="absolute inset-0 flex flex-col justify-end z-20"
         style={{ y: contentY, opacity: contentFade }}
       >
         <motion.div
-          className="px-8 md:px-14 lg:px-20 pb-14 md:pb-20 max-w-5xl"
+          className="px-8 md:px-14 lg:px-20 pb-14 md:pb-20"
+          style={{ maxWidth: "min(52%, 620px)" }}
           variants={heroVariants}
           initial="hidden"
           animate="visible"
@@ -1239,24 +1254,21 @@ function CinematicHero() {
           {/* Eyebrow */}
           <motion.div variants={item} className="flex items-center gap-3 mb-7">
             <div className="h-px w-8" style={{ background: T.accentSoft }} />
-            <span
-              className="text-[10px] font-bold uppercase tracking-[0.28em]"
-              style={{ color: T.accentSoft }}
-            >
-              Orchestra V2 · Cinematic Platform
+            <span className="text-[10px] font-bold uppercase tracking-[0.28em]" style={{ color: T.accentSoft }}>
+              Collected V2 · Cinematic Platform
             </span>
           </motion.div>
 
-          {/* Main headline — massive editorial scale */}
+          {/* Headline */}
           <motion.h1
             variants={item}
-            className="mb-8"
+            className="mb-7"
             style={{
               fontFamily: '"Helvetica Neue", "Arial Black", sans-serif',
               fontWeight: 900,
-              fontSize: "clamp(3.8rem, 9.5vw, 10.5rem)",
+              fontSize: "clamp(3.2rem, 6vw, 7rem)",
               letterSpacing: "-0.04em",
-              lineHeight: 0.88,
+              lineHeight: 0.90,
               color: T.text,
             }}
           >
@@ -1268,43 +1280,36 @@ function CinematicHero() {
           </motion.h1>
 
           {/* Sub + CTAs */}
-          <motion.div variants={item} className="flex flex-col sm:flex-row sm:items-end gap-7">
-            <p
-              className="max-w-md leading-relaxed"
-              style={{ color: T.muted, fontSize: "clamp(0.9rem, 1.5vw, 1.1rem)" }}
-            >
-              Orchestra generates immersive startup worlds. Each brand a distinct visual universe —
-              cinematically composed, atmospherically alive, launch-ready.
+          <motion.div variants={item} className="flex flex-col gap-6">
+            <p style={{ color: T.muted, fontSize: "clamp(0.82rem, 1.25vw, 0.97rem)", lineHeight: 1.68, maxWidth: 370 }}>
+              Orchestra generates immersive startup worlds. Each brand a distinct visual
+              universe — cinematically composed, atmospherically alive, launch-ready.
             </p>
-            <div className="flex flex-wrap gap-3 shrink-0">
+            <div className="flex flex-wrap gap-3">
               <motion.button
-                className="px-7 py-3.5 rounded-full text-sm font-bold text-white"
+                className="px-6 py-3 rounded-full text-sm font-bold text-white flex items-center gap-2"
                 style={{ background: T.accent }}
                 whileHover={{ scale: 1.04, y: -2, boxShadow: `0 12px 32px ${T.accent}55` }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
-                Generate Your World
+                Generate Your World <span style={{ opacity: 0.85 }}>→</span>
               </motion.button>
               <motion.button
-                className="px-7 py-3.5 rounded-full text-sm font-medium"
-                style={{
-                  color: T.text,
-                  border: `1px solid ${T.borderHi}`,
-                  background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
-                }}
-                whileHover={{ borderColor: T.accentSoft, y: -1 }}
-                transition={{ duration: 0.2 }}
+                className="px-6 py-3 rounded-full text-sm font-medium flex items-center gap-2"
+                style={{ color: T.muted, border: `1px solid ${T.border}` }}
+                whileHover={{ borderColor: T.borderHi, color: T.text, y: -1 }}
+                transition={{ duration: 0.18 }}
               >
-                See Examples ↓
+                See Examples <span style={{ opacity: 0.7 }}>→</span>
               </motion.button>
             </div>
           </motion.div>
 
-          {/* Micro stats */}
+          {/* Stats row */}
           <motion.div
             variants={item}
-            className="flex items-center gap-8 mt-11 pt-8"
+            className="flex items-center gap-7 mt-10 pt-8"
             style={{ borderTop: `1px solid ${T.border}` }}
           >
             {[
@@ -1313,44 +1318,209 @@ function CinematicHero() {
               { v: "V2",  l: "Cinematic engine" },
             ].map(({ v, l }) => (
               <div key={l} className="flex flex-col">
-                <span style={{ color: T.text, fontWeight: 800, fontSize: "1.5rem", letterSpacing: "-0.03em" }}>
-                  {v}
-                </span>
-                <span style={{ color: T.muted, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.15em", marginTop: 2 }}>
-                  {l}
-                </span>
+                <span style={{ color: T.text, fontWeight: 800, fontSize: "1.35rem", letterSpacing: "-0.03em" }}>{v}</span>
+                <span style={{ color: T.muted, fontSize: "0.67rem", textTransform: "uppercase", letterSpacing: "0.15em", marginTop: 2 }}>{l}</span>
               </div>
             ))}
+            <div className="ml-auto hidden lg:flex flex-col items-end">
+              <span style={{ color: T.muted, fontSize: "0.60rem", textTransform: "uppercase", letterSpacing: "0.20em" }}>Active World</span>
+              <span style={{ color: T.accentSoft, fontWeight: 700, fontSize: "0.72rem", letterSpacing: "0.06em" }}>SYNTHERA</span>
+            </div>
           </motion.div>
         </motion.div>
       </motion.div>
 
-      {/* Scroll indicator — right edge */}
+      {/* Scroll indicator */}
       <motion.div
         className="absolute bottom-8 right-10 flex flex-col items-center gap-2 z-20"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 2.4, duration: 0.8 }}
+        transition={{ delay: 2.2, duration: 0.8 }}
       >
-        <span
-          style={{
-            color: T.muted,
-            fontSize: 9,
-            letterSpacing: "0.25em",
-            textTransform: "uppercase",
-            writingMode: "vertical-rl",
-          }}
-        >
+        <span style={{ color: T.muted, fontSize: 9, letterSpacing: "0.25em", textTransform: "uppercase", writingMode: "vertical-rl" }}>
           Scroll
         </span>
         <motion.div
           className="w-px"
-          style={{ background: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.20)" }}
-          animate={{ height: [20, 42, 20], opacity: [0.25, 0.55, 0.25] }}
+          style={{ background: isDark ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.18)" }}
+          animate={{ height: [18, 38, 18], opacity: [0.22, 0.50, 0.22] }}
           transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
         />
       </motion.div>
     </motion.section>
+  );
+}
+
+// ─── World Variants section ───────────────────────────────────────────────────
+
+function VariantCard({
+  variant, isActive, onClick,
+}: {
+  variant: typeof VARIANTS[number]; isActive: boolean; onClick: () => void;
+}) {
+  const { theme } = useTheme();
+  const T = useTokens();
+  const isLumina   = variant.key === "lumina";
+  const textColor  = isLumina ? "rgba(20,20,40,0.88)"  : "rgba(255,255,255,0.90)";
+  const mutedColor = isLumina ? "rgba(20,20,40,0.40)"  : "rgba(255,255,255,0.40)";
+  const numColor   = isLumina ? "rgba(20,20,40,0.08)"  : "rgba(255,255,255,0.06)";
+
+  return (
+    <motion.div
+      onClick={onClick}
+      className="relative overflow-hidden rounded-2xl cursor-pointer"
+      style={{
+        height: 210,
+        background: variant.cardBg,
+        border: isActive ? `1px solid ${variant.accent}55` : `1px solid ${T.border}`,
+        boxShadow: isActive ? `0 0 52px ${variant.accent}18, 0 0 100px ${variant.accent}0c` : "none",
+      }}
+      whileHover={{ scale: 1.025, y: -3 }}
+      transition={{ type: "spring", stiffness: 320, damping: 30 }}
+    >
+      {/* Atmospheric glow */}
+      <motion.div
+        style={{
+          position: "absolute", inset: 0,
+          background: `radial-gradient(ellipse 85% 85% at 65% 50%, ${variant.glow} 0%, transparent 70%)`,
+        }}
+        animate={{ opacity: isActive ? 1 : 0.5 }}
+        transition={{ duration: 0.5 }}
+      />
+
+      {/* Object preview */}
+      {variant.objectSrc ? (
+        <motion.div
+          style={{ position: "absolute", right: "-8%", top: "50%", translateY: "-50%", width: "58%", height: "120%" }}
+          animate={{ y: [0, -8, 0] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <Image src={variant.objectSrc} fill className="object-contain" alt={variant.name} />
+        </motion.div>
+      ) : (
+        <motion.div
+          style={{
+            position: "absolute", right: "12%", top: "50%", translateY: "-50%",
+            width: 90, height: 90, borderRadius: "50%",
+            background: `radial-gradient(circle at 33% 30%, rgba(255,255,255,0.94) 0%, ${variant.accent}cc 40%, rgba(10,5,25,0.88) 80%)`,
+            boxShadow: `0 0 50px ${variant.accent}50`,
+          }}
+          animate={{ y: [0, -8, 0], rotate: [0, 2, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+      )}
+
+      {/* Number watermark */}
+      <span style={{
+        position: "absolute", top: 10, left: 14,
+        fontSize: "3rem", fontWeight: 900, letterSpacing: "-0.06em",
+        color: numColor, lineHeight: 1, userSelect: "none",
+      }}>
+        {variant.num}
+      </span>
+
+      {/* Labels */}
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 18px 16px" }}>
+        <p style={{ color: textColor, fontWeight: 800, fontSize: "0.82rem", letterSpacing: "0.14em", textTransform: "uppercase" }}>
+          {variant.name}
+        </p>
+        <p style={{ color: mutedColor, fontSize: "0.68rem", letterSpacing: "0.06em", marginTop: 2 }}>
+          {variant.desc}
+        </p>
+      </div>
+
+      {/* Active indicator dot */}
+      <AnimatePresence>
+        {isActive && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0 }}
+            style={{
+              position: "absolute", top: 14, right: 14,
+              width: 7, height: 7, borderRadius: "50%",
+              background: variant.accent,
+              boxShadow: `0 0 10px ${variant.accent}`,
+            }}
+          />
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+function WorldVariants() {
+  const { theme } = useTheme();
+  const T = useTokens();
+  const isDark = theme === "dark";
+  const [activeKey, setActiveKey] = useState<VariantKey>("synthera");
+
+  return (
+    <section style={{ background: isDark ? "#070710" : T.bg, borderTop: `1px solid ${T.border}`, padding: "44px 0 68px" }}>
+      <div className="px-8 md:px-14 lg:px-20">
+        {/* Header */}
+        <motion.div
+          className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8"
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: E.expo as any }}
+        >
+          <div>
+            <div className="flex items-center gap-3 mb-2.5">
+              <div className="h-px w-6" style={{ background: T.accentSoft }} />
+              <span className="text-[10px] font-bold uppercase tracking-[0.28em]" style={{ color: T.accentSoft }}>
+                World Variants
+              </span>
+            </div>
+            <p style={{ color: T.muted, fontSize: 13, maxWidth: 340, lineHeight: 1.62 }}>
+              Cinematically distinct startup visual universes. Each brand, a different world.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: `${T.accent}12`, border: `1px solid ${T.accent}28` }}>
+              <motion.div
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: "#22c55e" }}
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1.8, repeat: Infinity }}
+              />
+              <span style={{ color: T.accentSoft, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em" }}>
+                Live Preview
+              </span>
+            </div>
+            <motion.button
+              className="px-4 py-2 rounded-full text-xs font-semibold"
+              style={{ border: `1px solid ${T.borderHi}`, color: T.muted, background: "transparent" }}
+              whileHover={{ borderColor: T.accent, color: T.text }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.18 }}
+            >
+              Customize World →
+            </motion.button>
+          </div>
+        </motion.div>
+
+        {/* Variant cards */}
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, ease: E.expo as any, delay: 0.1 }}
+        >
+          {VARIANTS.map((variant) => (
+            <VariantCard
+              key={variant.key}
+              variant={variant as unknown as typeof VARIANTS[number]}
+              isActive={activeKey === variant.key}
+              onClick={() => setActiveKey(variant.key)}
+            />
+          ))}
+        </motion.div>
+      </div>
+    </section>
   );
 }
 
@@ -2638,6 +2808,7 @@ export default function V2Page() {
       >
         <V2Nav />
         <CinematicHero />
+        <WorldVariants />
         <WorldShowcase />
         <OrchestraEcosystem />
         <Manifesto />
