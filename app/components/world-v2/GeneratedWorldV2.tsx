@@ -2,9 +2,23 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+  useMotionValue,
+  useMotionTemplate,
+  useMotionValueEvent,
+  AnimatePresence,
+} from "framer-motion";
 import type { GeneratedSections, StartupBrief } from "@/lib/types/startup";
 import type { WorldV2Package, V2Section, V2ImageSlot } from "@/lib/world-v2";
 import { useHeroParallax, parallaxTransform } from "../direction-engine/shared/useScrollParallax";
+
+// Premium easing curves from 21st.dev patterns
+const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
+const EASE_IN_OUT_QUART = [0.76, 0, 0.24, 1] as const;
 
 type Props = {
   brief: StartupBrief;
@@ -62,24 +76,49 @@ function V2Image({
 /** True full-viewport cinematic hero — photo fills the world, text is editorial */
 function HeroCinematic({ world, sections, parallax }: { world: WorldV2Package; sections: GeneratedSections; parallax: number }) {
   const img = world.sections.find((s) => s.type === "hero-cinematic")?.images[0] ?? world.heroImage;
+
+  const heroText = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.13, delayChildren: 0.25 } },
+  };
+  const heroItem = {
+    hidden: { opacity: 0, y: 36 },
+    visible: { opacity: 1, y: 0, transition: { duration: 1.0, ease: EASE_OUT_EXPO } },
+  };
+
   return (
     <section className="relative w-full overflow-hidden" style={{ height: "100svh", minHeight: "600px", color: "#fff" }}>
-      {/* Full-bleed photo with parallax */}
+      {/* Ken Burns entrance + scroll parallax on image */}
       <div className="absolute inset-0" style={{ transform: parallaxTransform(0.55, parallax, 100) }}>
-        <V2Image image={img} priority overlay="strong" meshFrom={world.meshFrom} meshTo={world.meshTo} className="absolute inset-0" />
+        <motion.div
+          className="absolute inset-0"
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1.0 }}
+          transition={{ duration: 2.2, ease: "easeOut" }}
+        >
+          <V2Image image={img} priority overlay="strong" meshFrom={world.meshFrom} meshTo={world.meshTo} className="absolute inset-0" />
+        </motion.div>
       </div>
 
       {/* Accent color wash at top */}
-      <div
+      <motion.div
         className="absolute inset-x-0 top-0 h-64 pointer-events-none"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.6, delay: 0.1 }}
         style={{ background: `linear-gradient(to bottom, ${world.accentColor}28 0%, transparent 100%)` }}
         aria-hidden
       />
 
-      {/* Bottom editorial text block */}
-      <div className="absolute inset-x-0 bottom-0 z-10 px-6 md:px-14 pb-12 md:pb-16">
+      {/* Bottom editorial text block — staggered reveal */}
+      <motion.div
+        className="absolute inset-x-0 bottom-0 z-10 px-6 md:px-14 pb-12 md:pb-16"
+        variants={heroText}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Eyebrow */}
-        <div className="flex items-center gap-3 mb-5">
+        <motion.div variants={heroItem} className="flex items-center gap-3 mb-5">
           <span
             className="text-[10px] font-bold uppercase tracking-[0.22em] px-3 py-1 rounded-full"
             style={{ background: world.accentColor, color: "#fff" }}
@@ -87,11 +126,12 @@ function HeroCinematic({ world, sections, parallax }: { world: WorldV2Package; s
             {world.categoryLabel}
           </span>
           <span className="text-[10px] font-medium uppercase tracking-widest opacity-60">{sections.hero.eyebrow}</span>
-        </div>
+        </motion.div>
 
         {/* Main headline — editorial scale */}
-        <h1
-          className="v2-reveal mb-5 max-w-5xl"
+        <motion.h1
+          variants={heroItem}
+          className="mb-5 max-w-5xl"
           style={{
             fontFamily: world.typography.displayFamily,
             fontWeight: world.typography.displayWeight,
@@ -102,31 +142,44 @@ function HeroCinematic({ world, sections, parallax }: { world: WorldV2Package; s
           }}
         >
           {sections.hero.headline}
-        </h1>
+        </motion.h1>
 
-        <div className="flex flex-col sm:flex-row sm:items-end gap-6 v2-reveal v2-reveal-delay-1">
+        <motion.div variants={heroItem} className="flex flex-col sm:flex-row sm:items-end gap-6">
           <p className="text-sm md:text-base max-w-sm opacity-80 leading-relaxed">
             {sections.hero.subheadline}
           </p>
           <div className="flex gap-3 shrink-0">
-            <span
-              className="text-sm font-bold px-6 py-3 rounded-full"
+            <motion.span
+              className="text-sm font-bold px-6 py-3 rounded-full cursor-pointer"
               style={{ background: world.accentColor, color: "#fff" }}
+              whileHover={{ scale: 1.04, y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
               {sections.hero.ctaPrimary}
-            </span>
+            </motion.span>
             <span className="text-sm font-medium px-6 py-3 rounded-full border border-white/30 text-white/90">
               {sections.hero.ctaSecondary}
             </span>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Scroll indicator */}
-      <div className="absolute bottom-6 right-8 z-10 opacity-50 hidden md:flex flex-col items-center gap-1">
+      <motion.div
+        className="absolute bottom-6 right-8 z-10 hidden md:flex flex-col items-center gap-1"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.5 }}
+        transition={{ delay: 1.4, duration: 0.8 }}
+      >
         <span className="text-white text-[9px] uppercase tracking-widest" style={{ writingMode: "vertical-rl" }}>Scroll</span>
-        <div className="w-px h-10 bg-white/50" />
-      </div>
+        <motion.div
+          className="w-px bg-white/50"
+          initial={{ height: 0 }}
+          animate={{ height: 40 }}
+          transition={{ delay: 1.8, duration: 0.6, ease: "easeOut" }}
+        />
+      </motion.div>
     </section>
   );
 }
@@ -152,16 +205,19 @@ function HeroSplitKinetic({ world, sections, parallax }: { world: WorldV2Package
           />
 
           {/* Category eyebrow */}
-          <p
+          <motion.p
             className="text-[10px] font-bold uppercase tracking-[0.25em] mb-6"
             style={{ color: world.accentColor }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, ease: EASE_OUT_EXPO, delay: 0.1 }}
           >
             {world.categoryLabel} · {world.variantLabel}
-          </p>
+          </motion.p>
 
           {/* Headline — breaks large */}
-          <h1
-            className="mb-8 v2-reveal"
+          <motion.h1
+            className="mb-8"
             style={{
               fontFamily: world.typography.displayFamily,
               fontWeight: world.typography.displayWeight,
@@ -170,44 +226,73 @@ function HeroSplitKinetic({ world, sections, parallax }: { world: WorldV2Package
               lineHeight: "1.0",
               color: world.foreground,
             }}
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.0, ease: EASE_OUT_EXPO, delay: 0.2 }}
           >
             {sections.hero.headline}
-          </h1>
+          </motion.h1>
 
           {/* Thin rule */}
-          <div className="w-12 h-px mb-6" style={{ background: world.accentColor }} />
+          <motion.div
+            className="h-px mb-6"
+            style={{ background: world.accentColor }}
+            initial={{ width: 0 }}
+            animate={{ width: 48 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.7 }}
+          />
 
-          <p className="text-sm md:text-base opacity-65 max-w-xs mb-10 leading-relaxed v2-reveal v2-reveal-delay-1">
+          <motion.p
+            className="text-sm md:text-base opacity-65 max-w-xs mb-10 leading-relaxed"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.35 }}
+          >
             {sections.hero.subheadline}
-          </p>
+          </motion.p>
 
-          <div className="flex flex-wrap gap-3 v2-reveal v2-reveal-delay-2">
-            <span
-              className="text-sm font-bold px-6 py-3 rounded-full text-white"
+          <motion.div
+            className="flex flex-wrap gap-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.48 }}
+          >
+            <motion.span
+              className="text-sm font-bold px-6 py-3 rounded-full text-white cursor-pointer"
               style={{ background: world.accentColor }}
+              whileHover={{ scale: 1.04, y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
               {sections.hero.ctaPrimary}
-            </span>
+            </motion.span>
             <span
               className="text-sm font-medium px-6 py-3 rounded-full border"
               style={{ borderColor: `${world.foreground}20`, color: world.foreground }}
             >
               {sections.hero.ctaSecondary}
             </span>
-          </div>
+          </motion.div>
         </div>
 
         {/* Photo panel — right, 58%, full-bleed no padding */}
         <div className="relative min-h-[60vw] lg:min-h-full order-1 lg:order-2 overflow-hidden">
           <div className="absolute inset-0" style={{ transform: parallaxTransform(0.3, parallax) }}>
-            <V2Image
-              image={imgs[0]}
-              priority
-              overlay="none"
-              meshFrom={world.meshFrom}
-              meshTo={world.meshTo}
+            <motion.div
               className="absolute inset-0"
-            />
+              initial={{ scale: 1.08 }}
+              animate={{ scale: 1.0 }}
+              transition={{ duration: 2.0, ease: "easeOut" }}
+            >
+              <V2Image
+                image={imgs[0]}
+                priority
+                overlay="none"
+                meshFrom={world.meshFrom}
+                meshTo={world.meshTo}
+                className="absolute inset-0"
+              />
+            </motion.div>
           </div>
           {/* Blend toward text panel on desktop */}
           <div
@@ -215,18 +300,22 @@ function HeroSplitKinetic({ world, sections, parallax }: { world: WorldV2Package
             style={{ background: `linear-gradient(to right, ${world.background}, transparent)` }}
             aria-hidden
           />
-          {/* Floating secondary image if present */}
+          {/* Floating secondary image — FM float animation */}
           {imgs[1] && (
-            <div
-              className="absolute bottom-12 left-8 w-[36%] aspect-[4/5] overflow-hidden shadow-2xl v2-float hidden md:block"
+            <motion.div
+              className="absolute bottom-12 left-8 w-[36%] aspect-[4/5] overflow-hidden shadow-2xl hidden md:block"
               style={{
                 transform: parallaxTransform(-0.2, parallax, 30),
                 border: `2px solid ${world.accentColor}40`,
                 borderRadius: "12px",
               }}
+              initial={{ opacity: 0, y: 40, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 1.1, ease: EASE_OUT_EXPO, delay: 0.6 }}
+              whileHover={{ y: -8, scale: 1.03 }}
             >
               <V2Image image={imgs[1]} overlay="light" meshFrom={world.meshFrom} meshTo={world.meshTo} className="absolute inset-0" />
-            </div>
+            </motion.div>
           )}
         </div>
       </div>
@@ -237,14 +326,26 @@ function HeroSplitKinetic({ world, sections, parallax }: { world: WorldV2Package
 /** Stats band — editorial number display, NOT a uniform 3-column grid */
 function StatsBand({ world, brief }: { world: WorldV2Package; brief: StartupBrief }) {
   const primary = brief.pricing.tiers[0]?.price ?? "$29";
+  const statVariants = {
+    hidden: { opacity: 0, y: 24 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.1, duration: 0.7, ease: EASE_OUT_EXPO },
+    }),
+  };
+
   return (
-    <section
+    <motion.section
       className="overflow-hidden"
       style={{ background: world.accentColor, color: "#fff" }}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-80px" }}
     >
       <div className="px-6 md:px-14 py-8 md:py-10 flex flex-col md:flex-row items-start md:items-center gap-0 md:gap-0 divide-y md:divide-y-0 md:divide-x divide-white/20">
         {/* Primary stat — very large */}
-        <div className="flex flex-col pr-0 md:pr-16 pb-6 md:pb-0">
+        <motion.div className="flex flex-col pr-0 md:pr-16 pb-6 md:pb-0" custom={0} variants={statVariants}>
           <span
             className="font-black leading-none"
             style={{ fontSize: "clamp(3.5rem, 8vw, 6rem)", letterSpacing: "-0.03em" }}
@@ -252,11 +353,11 @@ function StatsBand({ world, brief }: { world: WorldV2Package; brief: StartupBrie
             12k+
           </span>
           <span className="text-[10px] uppercase tracking-[0.2em] opacity-70 mt-1">Active users</span>
-        </div>
+        </motion.div>
 
         {/* Secondary stats — medium */}
         <div className="flex gap-12 pl-0 md:pl-16 pt-6 md:pt-0">
-          <div>
+          <motion.div custom={1} variants={statVariants}>
             <span
               className="font-black leading-none block"
               style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", letterSpacing: "-0.03em" }}
@@ -264,8 +365,8 @@ function StatsBand({ world, brief }: { world: WorldV2Package; brief: StartupBrie
               4.9★
             </span>
             <span className="text-[10px] uppercase tracking-[0.2em] opacity-70 mt-1 block">Satisfaction</span>
-          </div>
-          <div>
+          </motion.div>
+          <motion.div custom={2} variants={statVariants}>
             <span
               className="font-black leading-none block"
               style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", letterSpacing: "-0.03em" }}
@@ -273,10 +374,10 @@ function StatsBand({ world, brief }: { world: WorldV2Package; brief: StartupBrie
               {primary}
             </span>
             <span className="text-[10px] uppercase tracking-[0.2em] opacity-70 mt-1 block">Starting price</span>
-          </div>
+          </motion.div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
@@ -329,32 +430,48 @@ function FeatureAsymmetric({
   }
 
   return (
-    <section
+    <motion.section
       style={{ background: sectionBg, color: world.foreground }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.6 }}
     >
       <div className={`grid grid-cols-1 lg:grid-cols-2`} style={{ minHeight: "70vh" }}>
-        {/* Image — full-bleed, no border-radius */}
-        <div
+        {/* Image — full-bleed with hover scale */}
+        <motion.div
           className={`relative min-h-[55vw] lg:min-h-full ${flip ? "lg:order-2" : "lg:order-1"} overflow-hidden`}
+          whileHover="hover"
         >
-          <V2Image
-            image={img}
-            overlay="light"
-            meshFrom={world.meshFrom}
-            meshTo={world.meshTo}
+          <motion.div
             className="absolute inset-0"
-          />
+            variants={{
+              hover: { scale: 1.04, transition: { duration: 0.7, ease: EASE_IN_OUT_QUART } },
+            }}
+          >
+            <V2Image
+              image={img}
+              overlay="light"
+              meshFrom={world.meshFrom}
+              meshTo={world.meshTo}
+              className="absolute inset-0"
+            />
+          </motion.div>
           {/* Accent strip at the bottom edge */}
           <div
             className="absolute bottom-0 left-0 right-0 h-1 pointer-events-none"
             style={{ background: world.accentColor, opacity: 0.6 }}
             aria-hidden
           />
-        </div>
+        </motion.div>
 
         {/* Text — generous padding, editorial scale */}
-        <div
+        <motion.div
           className={`flex flex-col justify-center px-8 md:px-14 py-16 md:py-20 ${flip ? "lg:order-1" : "lg:order-2"}`}
+          initial={{ opacity: 0, x: flip ? -30 : 30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.15 }}
         >
           <p
             className="text-[10px] font-bold uppercase tracking-[0.25em] mb-5"
@@ -378,9 +495,9 @@ function FeatureAsymmetric({
           <p className="text-base leading-relaxed" style={{ opacity: 0.65, maxWidth: "38ch" }}>
             {feature.description}
           </p>
-        </div>
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
@@ -396,7 +513,14 @@ function EditorialMosaic({ world, section }: { world: WorldV2Package; section: V
   ];
 
   return (
-    <section className="overflow-hidden" style={{ background: world.background }}>
+    <motion.section
+      className="overflow-hidden"
+      style={{ background: world.background }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.7 }}
+    >
       {/* Full-bleed grid, no padding */}
       <div className="grid gap-[3px]" style={{ gridTemplateColumns: "63% 37%", gridTemplateRows: "auto auto" }}>
         {/* Large primary image — spans 2 rows */}
@@ -435,7 +559,7 @@ function EditorialMosaic({ world, section }: { world: WorldV2Package; section: V
           </div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
@@ -456,13 +580,18 @@ function ProofGallery({ world, section, title }: { world: WorldV2Package; sectio
         <div className="flex-1 h-px" style={{ background: `${world.foreground}18` }} />
       </div>
 
-      {/* Scroll strip — edge to edge */}
+      {/* Scroll strip — staggered entrance, edge to edge */}
       <div className="flex gap-[3px] overflow-x-auto pb-0 snap-x snap-mandatory scrollbar-none pl-6 md:pl-14">
         {allImages.map((img, i) => (
-          <div
+          <motion.div
             key={`${img.id}-${i}`}
             className="snap-start shrink-0 overflow-hidden"
             style={{ width: "clamp(260px, 55vw, 420px)", aspectRatio: "3/4" }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ delay: i * 0.08, duration: 0.7, ease: EASE_OUT_EXPO }}
+            whileHover={{ scale: 1.02, y: -6, transition: { duration: 0.4, ease: EASE_IN_OUT_QUART } }}
           >
             <V2Image
               image={img}
@@ -471,7 +600,7 @@ function ProofGallery({ world, section, title }: { world: WorldV2Package; sectio
               meshTo={world.meshTo}
               className="h-full w-full"
             />
-          </div>
+          </motion.div>
         ))}
         {/* Trailing spacer */}
         <div className="shrink-0 w-6 md:w-14" aria-hidden />
@@ -484,17 +613,35 @@ function ProofGallery({ world, section, title }: { world: WorldV2Package; sectio
 function StoryEditorial({ world, section, brief }: { world: WorldV2Package; section: V2Section; brief: StartupBrief }) {
   const img = section.images[0] ?? world.heroImage;
   return (
-    <section
+    <motion.section
       className="grid grid-cols-1 md:grid-cols-[60%_40%]"
       style={{ background: world.background, color: world.foreground, minHeight: "55vh" }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.7 }}
     >
-      {/* Image — no border-radius, bleeds full height */}
-      <div className="relative min-h-[50vw] md:min-h-full overflow-hidden">
-        <V2Image image={img} overlay="light" meshFrom={world.meshFrom} meshTo={world.meshTo} className="absolute inset-0" />
-      </div>
+      {/* Image — hover scale */}
+      <motion.div
+        className="relative min-h-[50vw] md:min-h-full overflow-hidden"
+        whileHover="hover"
+      >
+        <motion.div
+          className="absolute inset-0"
+          variants={{ hover: { scale: 1.03, transition: { duration: 0.7, ease: EASE_IN_OUT_QUART } } }}
+        >
+          <V2Image image={img} overlay="light" meshFrom={world.meshFrom} meshTo={world.meshTo} className="absolute inset-0" />
+        </motion.div>
+      </motion.div>
 
       {/* Text — editorial pull-quote treatment */}
-      <div className="flex flex-col justify-center px-8 md:px-12 lg:px-16 py-14">
+      <motion.div
+        className="flex flex-col justify-center px-8 md:px-12 lg:px-16 py-14"
+        initial={{ opacity: 0, x: 24 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.15 }}
+      >
         <p className="text-[10px] uppercase tracking-[0.22em] mb-6" style={{ color: world.accentColor, fontWeight: 700 }}>
           Our story
         </p>
@@ -510,9 +657,16 @@ function StoryEditorial({ world, section, brief }: { world: WorldV2Package; sect
         >
           {brief.description}
         </p>
-        <div className="mt-8 h-px w-12" style={{ background: world.accentColor }} />
-      </div>
-    </section>
+        <motion.div
+          className="mt-8 h-px"
+          style={{ background: world.accentColor }}
+          initial={{ width: 0 }}
+          whileInView={{ width: 48 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+        />
+      </motion.div>
+    </motion.section>
   );
 }
 
@@ -523,9 +677,13 @@ function TestimonialFloat({ world, sections, section }: { world: WorldV2Package;
   const bg = section.images[0];
 
   return (
-    <section
+    <motion.section
       className="relative overflow-hidden flex items-center"
       style={{ background: world.meshFrom, color: world.foreground, minHeight: "52vh" }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.8 }}
     >
       {/* Background photo at low opacity */}
       {bg && (
@@ -535,15 +693,25 @@ function TestimonialFloat({ world, sections, section }: { world: WorldV2Package;
         </div>
       )}
 
-      <blockquote className="relative z-10 px-8 md:px-20 py-16 max-w-4xl mx-auto">
+      <motion.blockquote
+        className="relative z-10 px-8 md:px-20 py-16 max-w-4xl mx-auto"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.9, ease: EASE_OUT_EXPO, delay: 0.1 }}
+      >
         {/* Large opening quotation mark */}
-        <div
+        <motion.div
           className="leading-none mb-4 select-none font-black"
-          style={{ fontSize: "clamp(4rem, 10vw, 8rem)", color: world.accentColor, opacity: 0.4, lineHeight: 1 }}
+          style={{ fontSize: "clamp(4rem, 10vw, 8rem)", color: world.accentColor, lineHeight: 1 }}
+          initial={{ opacity: 0, scale: 0.7 }}
+          whileInView={{ opacity: 0.4, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, ease: EASE_OUT_EXPO }}
           aria-hidden
         >
           &ldquo;
-        </div>
+        </motion.div>
         <p
           className="leading-tight mb-8"
           style={{
@@ -561,31 +729,65 @@ function TestimonialFloat({ world, sections, section }: { world: WorldV2Package;
           <span className="text-sm opacity-40">·</span>
           <span className="text-sm opacity-60">{t?.role}</span>
         </footer>
-      </blockquote>
-    </section>
+      </motion.blockquote>
+    </motion.section>
   );
 }
 
-/** CTA — true full-bleed, no margin or rounding, vertical centering, left-aligned text */
+/** CTA — true full-bleed, mouse spotlight, cinematic accent */
 function CtaImmersive({ world, sections, section }: { world: WorldV2Package; sections: GeneratedSections; section: V2Section }) {
   const img = section.images[0] ?? world.heroImage;
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const spotlightBg = useMotionTemplate`radial-gradient(500px at ${mouseX}px ${mouseY}px, ${world.accentColor}45 0%, transparent 70%)`;
+
   return (
-    <section
+    <motion.section
       className="relative overflow-hidden flex items-center"
       style={{ minHeight: "60vh" }}
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        mouseX.set(e.clientX - rect.left);
+        mouseY.set(e.clientY - rect.top);
+      }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.8 }}
     >
-      {/* Full-bleed photo */}
-      <V2Image image={img} overlay="strong" meshFrom={world.meshFrom} meshTo={world.meshTo} className="absolute inset-0" />
+      {/* Full-bleed photo with entrance scale */}
+      <motion.div
+        className="absolute inset-0"
+        initial={{ scale: 1.06 }}
+        whileInView={{ scale: 1.0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 1.6, ease: "easeOut" }}
+      >
+        <V2Image image={img} overlay="strong" meshFrom={world.meshFrom} meshTo={world.meshTo} className="absolute inset-0" />
+      </motion.div>
 
-      {/* Accent color wash from left */}
+      {/* Static accent wash from left */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{ background: `linear-gradient(to right, ${world.accentColor}50 0%, transparent 55%)` }}
         aria-hidden
       />
 
-      {/* Text — left-aligned, editorial */}
-      <div className="relative z-10 px-8 md:px-14 py-16 max-w-2xl text-white">
+      {/* Mouse-tracking spotlight */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: spotlightBg }}
+        aria-hidden
+      />
+
+      {/* Text — left-aligned, staggered */}
+      <motion.div
+        className="relative z-10 px-8 md:px-14 py-16 max-w-2xl text-white"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-40px" }}
+        transition={{ duration: 0.9, ease: EASE_OUT_EXPO, delay: 0.2 }}
+      >
         <h2
           className="mb-6 leading-[1.0]"
           style={{
@@ -600,14 +802,17 @@ function CtaImmersive({ world, sections, section }: { world: WorldV2Package; sec
         <p className="text-sm md:text-base opacity-80 max-w-sm mb-8 leading-relaxed">
           {sections.cta.subheadline}
         </p>
-        <span
-          className="inline-block text-sm font-bold px-8 py-4 rounded-full"
+        <motion.span
+          className="inline-block text-sm font-bold px-8 py-4 rounded-full cursor-pointer"
           style={{ background: world.accentColor }}
+          whileHover={{ scale: 1.05, y: -3 }}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 400, damping: 20 }}
         >
           {sections.cta.buttonText}
-        </span>
-      </div>
-    </section>
+        </motion.span>
+      </motion.div>
+    </motion.section>
   );
 }
 
@@ -725,47 +930,81 @@ function WorldNav({
   world,
   sections,
   floating = true,
+  isPreview = false,
 }: {
   world: WorldV2Package;
   sections: GeneratedSections;
   floating?: boolean;
+  isPreview?: boolean;
 }) {
   const isDark =
     world.background.startsWith("#0") ||
     world.background === "#0a0a0a" ||
     world.background === "#0f172a";
 
+  const { scrollY } = useScroll();
+  const [navVisible, setNavVisible] = useState(true);
+
+  useMotionValueEvent(scrollY, "change", (current) => {
+    if (isPreview) return;
+    const prev = scrollY.getPrevious() ?? 0;
+    // Always show near top; show on scroll-up, hide on scroll-down
+    setNavVisible(current < 60 || current < prev);
+  });
+
   if (floating) {
+    // Cinematic hero — floating nav with scroll-direction hide/show
     return (
-      <nav
-        className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between px-6 md:px-14 py-6"
-        style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 100%)" }}
-        aria-label="site navigation"
-      >
-        <span
-          className="text-sm font-black tracking-tight"
-          style={{ color: "#fff", textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}
-        >
-          {sections.navbar.brandLabel}
-        </span>
-        <span
-          className="text-xs font-bold px-5 py-2 rounded-full"
-          style={{ background: world.accentColor, color: "#fff" }}
-        >
-          {sections.navbar.ctaLabel}
-        </span>
-      </nav>
+      <AnimatePresence>
+        {navVisible && (
+          <motion.nav
+            key="floating-nav"
+            className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between px-6 md:px-14 py-6"
+            style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%)" }}
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
+            aria-label="site navigation"
+          >
+            <motion.span
+              className="text-sm font-black tracking-tight"
+              style={{ color: "#fff", textShadow: "0 1px 10px rgba(0,0,0,0.7)" }}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+            >
+              {sections.navbar.brandLabel}
+            </motion.span>
+            <motion.span
+              className="text-xs font-bold px-5 py-2 rounded-full cursor-pointer"
+              style={{ background: world.accentColor, color: "#fff" }}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6, duration: 0.6 }}
+              whileHover={{ scale: 1.05, y: -1 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              {sections.navbar.ctaLabel}
+            </motion.span>
+          </motion.nav>
+        )}
+      </AnimatePresence>
     );
   }
 
+  // Split-kinetic: non-floating nav with entrance animation
   return (
-    <nav
+    <motion.nav
       className="flex items-center justify-between px-6 md:px-14 py-5 border-b"
       style={{
         background: world.background,
         borderColor: `${world.foreground}10`,
         color: world.foreground,
       }}
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
       aria-label="site navigation"
     >
       <span className="text-sm font-black tracking-tight" style={{ color: isDark ? "#fff" : world.foreground }}>
@@ -774,14 +1013,17 @@ function WorldNav({
       <div className="flex items-center gap-8">
         <span className="text-xs opacity-50 hidden md:block" style={{ letterSpacing: "0.05em" }}>Features</span>
         <span className="text-xs opacity-50 hidden md:block" style={{ letterSpacing: "0.05em" }}>Pricing</span>
-        <span
-          className="text-xs font-bold px-5 py-2 rounded-full"
+        <motion.span
+          className="text-xs font-bold px-5 py-2 rounded-full cursor-pointer"
           style={{ background: world.accentColor, color: "#fff" }}
+          whileHover={{ scale: 1.05, y: -1 }}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 400, damping: 20 }}
         >
           {sections.navbar.ctaLabel}
-        </span>
+        </motion.span>
       </div>
-    </nav>
+    </motion.nav>
   );
 }
 
@@ -843,7 +1085,7 @@ export default function GeneratedWorldV2({ brief, sections, world, isPreview = f
         if (section.type === "hero-cinematic" && rendered) {
           return (
             <div key={section.id} className="relative">
-              <WorldNav world={world} sections={sections} floating={true} />
+              <WorldNav world={world} sections={sections} floating={true} isPreview={isPreview} />
               {rendered}
             </div>
           );
@@ -851,7 +1093,7 @@ export default function GeneratedWorldV2({ brief, sections, world, isPreview = f
         if (section.type === "hero-split-kinetic" && rendered) {
           return (
             <div key={section.id}>
-              <WorldNav world={world} sections={sections} floating={false} />
+              <WorldNav world={world} sections={sections} floating={false} isPreview={isPreview} />
               {rendered}
             </div>
           );

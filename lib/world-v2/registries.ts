@@ -234,7 +234,7 @@ const REGISTRIES: Record<V2CategoryKey, CategoryRegistry> = {
     accents: ["#7c3aed", "#4f46e5", "#a855f7", "#06b6d4"],
     mesh: { from: "#0d0a1f", to: "#1a1040" },
     images: [
-      { id: "1501386761775-a76d33ae7f94", role: "hero", alt: "Concert crowd aerial cinematic" },
+      { id: "1493225457124-a3eb161ffa5f", role: "hero", alt: "Concert and music editorial cinematic" },
       { id: "1510915361894-db8d60106cb1", role: "hero", alt: "Stage performance dramatic light" },
       { id: "1493225457124-a3eb161ffa5f", role: "editorial", alt: "Headphones music focus" },
       { id: "1571330735066-03aaa9429d89", role: "feature", alt: "DJ production studio" },
