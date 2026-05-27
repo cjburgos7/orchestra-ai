@@ -4,12 +4,10 @@
  */
 
 import type { DirectionId, ImagerySet, ProductCategory, StartupBrief } from "@/lib/types/startup";
-import type { PreviewComposition } from "@/lib/orchestration/creative-layouts";
 import type { CategoryResolution } from "@/lib/orchestration/category-resolution";
 import { resolveCategory, resolutionCopyContext } from "@/lib/orchestration/category-resolution";
-import { getCategoryWorld, pickFromWorld } from "@/lib/orchestration/category-worlds";
+import { getCategoryWorld } from "@/lib/orchestration/category-worlds";
 import { buildArtDirectedImagery } from "@/lib/imagery/art-directed-pipeline";
-import { resolveWorldDNA } from "@/lib/orchestration/world-dna";
 
 function hashSeed(seed: string): number {
   let h = 0;
@@ -51,57 +49,6 @@ export function buildStartupWorld(
   };
 }
 
-export function resolveWorldPreview(
-  resolution: CategoryResolution,
-  direction: DirectionId,
-  seed: string,
-  brief?: StartupBrief
-): PreviewComposition {
-  // Category-specific compositions that override direction (analytics / creator worlds only)
-  if (brief) {
-    const dna = resolveWorldDNA(brief, resolution);
-    if (dna.thumbnailComposition === "sports-analytics") return "sports-analytics";
-    if (dna.thumbnailComposition === "creator-vibrant") return "creator-vibrant";
-  }
-
-  const world = getCategoryWorld(resolution.primary);
-
-  // Core directions always get distinct thumbnail layouts
-  if (direction === "orchestra") {
-    if (world.imageryOnly) return "editorial-commerce";
-    return "orchestra-clean";
-  }
-  if (direction === "minimal-clean") return "minimal-clean";
-  if (direction === "premium-dark" || direction === "cinematic-ai") return "dark-cinematic";
-  if (direction === "bold-experimental" || direction === "genz-vibrant" || direction === "creative-agency")
-    return "bold-collage";
-  if (direction === "luxury-editorial" || direction === "fashion-ai" || direction === "minimal-luxury")
-    return "luxury-editorial";
-  if (direction === "glass-futuristic" || direction === "retro-tech") return "glass-futuristic";
-  if (direction === "creator-playful" || direction === "apple-modern") return "creator-vibrant";
-
-  const base = world.thumbnailBase as PreviewComposition;
-
-  if (resolution.secondary === "basketball" || resolution.secondary === "soccer" || resolution.secondary === "running") {
-    return "fullscreen-hero";
-  }
-
-  if (resolution.secondary === "dogs" || resolution.secondary === "cats") {
-    if (direction === "premium-dark") return "dark-cinematic";
-    return "pet-lifestyle";
-  }
-
-  if (world.imageryOnly) {
-    return base === "product-grid" ? "editorial-commerce" : base;
-  }
-
-  return pickFromWorld(
-    [base, "editorial-commerce", "product-grid", "fullscreen-hero"] as PreviewComposition[],
-    seed,
-    "preview"
-  );
-}
-
 export function worldNavLabel(resolution: CategoryResolution): string {
   if (resolution.secondary === "basketball" || resolution.secondary === "soccer") return "Train";
   if (resolution.primary === "pets") return "Shop";
@@ -114,7 +61,7 @@ export function worldHeroEyebrow(resolution: CategoryResolution): string {
   return resolution.visualWorld.split("·")[0]?.trim() ?? getCategoryWorld(resolution.primary).label;
 }
 
-export { resolveCategory, resolutionCopyContext, pickFromWorld };
+export { resolveCategory, resolutionCopyContext };
 export { getCategoryWorld } from "@/lib/orchestration/category-worlds";
 
 /** @deprecated use resolveCategory().primary */

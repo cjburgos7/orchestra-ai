@@ -1,8 +1,10 @@
 import type { StartupProject } from "@/lib/types/startup";
 import { uniqueSlug } from "@/lib/utils/slug";
 import { generatePages } from "@/lib/orchestration/pipelines/generate-pages";
+import { WORLD_V2_ENABLED, buildWorldV2 } from "@/lib/world-v2";
 import { buildProductVisualsSync } from "@/lib/orchestration/product-visuals";
 import { ensureImageryComplete } from "@/lib/orchestration/creative-imagery";
+import { CINEMATIC_DIRECTION, resolveRenderDirection } from "@/lib/cinematic";
 import { pickWildcards } from "@/lib/orchestration/wildcards";
 import { briefFromProject } from "@/lib/types/startup";
 
@@ -76,9 +78,14 @@ export function migrateProject(project: StartupProject): StartupProject {
     : pickWildcards(project.id);
 
   let sections = project.generatedSections;
-  const direction = project.selectedDirection ?? "orchestra";
+  const direction = resolveRenderDirection(project.selectedDirection);
   const brief = briefFromProject(project);
-  if (sections) {
+  if (sections && WORLD_V2_ENABLED) {
+    sections = {
+      ...sections,
+      worldV2: buildWorldV2(brief, project.id),
+    };
+  } else if (sections) {
     const layout = sections.visuals?.layout;
     const imagery = sections.visuals?.imagery;
     const needsVisuals =
@@ -94,7 +101,10 @@ export function migrateProject(project: StartupProject): StartupProject {
       layout?.showCategories === undefined ||
       sections.visuals?.imageryOnly === undefined ||
       !sections.visuals?.secondaryCategory ||
-      !sections.visuals?.visualWorld ||
+      !sections.visuals?.creativeDirection ||
+      !sections.visuals?.creativeDirection?.variantLabel ||
+      !imagery?.artDirection?.pipelineTrace ||
+      (imagery?.artDirection?.pipelineTrace?.duplicateIds?.length ?? 0) > 0 ||
       !imagery?.hero?.startsWith("http") ||
       !imagery?.products?.some((p) => p.image.startsWith("http")) ||
       imagery?.heroFallback?.startsWith("linear-gradient") ||

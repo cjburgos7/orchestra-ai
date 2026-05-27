@@ -9,6 +9,8 @@ import type {
   StartupBrief,
 } from "@/lib/types/startup";
 import type { DirectionId } from "@/lib/types/startup";
+import { WORLD_V2_ENABLED } from "@/lib/world-v2";
+import GeneratedWorldV2 from "./world-v2/GeneratedWorldV2";
 import { LayoutHomePage } from "./LayoutHomePage";
 import { InlineDashboardPreview, ImmersionStrip, VisualGallery } from "./WebsiteVisuals";
 
@@ -33,6 +35,39 @@ export function HomePageContent({
   accentColor,
   seed,
 }: PageProps) {
+  if (WORLD_V2_ENABLED && sections.worldV2) {
+    return (
+      <>
+        {process.env.NODE_ENV === "development" && (
+          <div
+            style={{
+              position: "fixed",
+              bottom: 12,
+              right: 12,
+              zIndex: 9999,
+              background: "#06090f",
+              color: "#4ade80",
+              fontFamily: "monospace",
+              fontSize: 10,
+              padding: "4px 10px",
+              borderRadius: 6,
+              pointerEvents: "none",
+              border: "1px solid #166534",
+            }}
+          >
+            WorldV2 · {sections.worldV2.category} · {sections.worldV2.variantKey}
+          </div>
+        )}
+        <GeneratedWorldV2
+          brief={brief}
+          sections={sections}
+          world={sections.worldV2}
+          isPreview={isPreview}
+        />
+      </>
+    );
+  }
+
   return (
     <LayoutHomePage
       brief={brief}

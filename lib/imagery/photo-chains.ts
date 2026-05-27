@@ -3,11 +3,13 @@
  */
 
 import { buildUnsplashUrl } from "@/lib/curated-stock-photos";
+import { isVerifiedPhotoId } from "./verified-photos";
 import type { CategorizedImage, ImageRole, RegistryId } from "./image-types";
 import { getCategoryRegistry, getImagesForRole } from "./category-registries";
 import { filterSemanticallyValid } from "./semantic-guard";
 import { rotateCandidates } from "./diversity-engine";
 import { buildCropVariant } from "@/lib/slot-hydration";
+import { urlToId } from "@/lib/pipeline-trace";
 
 function hashSalt(s: string): number {
   let h = 0;
@@ -17,12 +19,12 @@ function hashSalt(s: string): number {
 
 /** Verified fruit hero IDs — always available if registry pick fails */
 const FRUIT_HERO_BACKUPS = [
-  "1610837524703-040399967cf0",
-  "1487700174473-bd5a8d0b4723",
-  "1566385101042-f4671190a963",
+  "1732959409019-b5979266d02d",
+  "1498579397066-22750a3cb424",
+  "1565299624946-b28f40a0ae38",
+  "1487376480913-24046456a727",
   "1464965911861-746a04b4bca6",
   "1512621776951-a57141f2eefd",
-  "1558618666-fcd25c85cd64",
 ];
 
 const REGISTRY_HERO_BACKUPS: Partial<Record<RegistryId, string[]>> = {
@@ -30,7 +32,9 @@ const REGISTRY_HERO_BACKUPS: Partial<Record<RegistryId, string[]>> = {
 };
 
 export function poolForRole(registryId: RegistryId, role: ImageRole): CategorizedImage[] {
-  return filterSemanticallyValid(registryId, getImagesForRole(getCategoryRegistry(registryId), role));
+  return filterSemanticallyValid(registryId, getImagesForRole(getCategoryRegistry(registryId), role)).filter(
+    (img) => isVerifiedPhotoId(registryId, img.id)
+  );
 }
 
 export function guaranteeHeroUrl(
@@ -66,9 +70,17 @@ export function buildHeroChain(
 
   if (hero.startsWith("http")) chain.push(hero);
 
+  const seenIds = new Set<string>();
+  const heroId = urlToId(hero);
+  if (heroId) seenIds.add(heroId);
+
   for (const img of rotated) {
+    if (seenIds.has(img.id)) continue;
     const url = treat(img.url, hashSalt(`${sessionSalt}:${img.id}`));
-    if (url.startsWith("http") && !chain.includes(url)) chain.push(url);
+    if (url.startsWith("http") && !chain.includes(url)) {
+      chain.push(url);
+      seenIds.add(img.id);
+    }
     if (chain.length >= limit) break;
   }
 

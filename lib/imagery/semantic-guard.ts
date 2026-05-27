@@ -25,7 +25,7 @@ const PEOPLE_SIGNALS = [
 ];
 
 const RULES: Record<string, SemanticRule> = {
-  fruit: {
+  "fruit": {
     allowedTags: [
       /produce/i, /orchard/i, /citrus/i, /berry/i, /berries/i, /strawberr/i, /apple/i, /banana/i,
       /grape/i, /watermelon/i, /smoothie/i, /juice/i, /market/i, /harvest/i, /farm/i,
@@ -35,13 +35,14 @@ const RULES: Record<string, SemanticRule> = {
     rejectedTags: [
       /vr/i, /gaming/i, /esports/i, /office/i, /laptop/i, /basketball/i, /yoga/i,
       /fashion/i, /portrait/i, /headshot/i, /startup/i, /tech photography/i,
+      /vendor/i, /farmer/i, /business/i, /suit/i, /selfie/i, /founder/i,
     ],
     rejectedSubjects: [
       /vr/i, /virtual reality/i, /headset/i, /gaming/i, /office worker/i,
       /startup founder/i, /random portrait/i, /basketball/i, /court/i, /arena/i,
-      /business meeting/i, /conference/i,
+      /business meeting/i, /conference/i, /person/i, /people/i, /\bman\b/i, /\bwoman\b/i,
+      /face/i, /headshot/i, /vendor/i, /farmer/i,
     ],
-    peopleContext: [/chef/i, /farmer/i, /vendor/i, /harvest/i, /market vendor/i],
   },
   "basketball-analytics": {
     allowedTags: [
@@ -97,10 +98,9 @@ export function validateImageSemanticFit(startupCategory: string, image: Categor
   }
 
   const hasPeople = matchesAny(text, PEOPLE_SIGNALS);
-  if (hasPeople && rule.peopleContext) {
-    if (!matchesAny(text, rule.peopleContext)) {
-      return false;
-    }
+  if (hasPeople) {
+    if (key === "fruit") return false;
+    if (rule.peopleContext && !matchesAny(text, rule.peopleContext)) return false;
   }
 
   return matchesAny(text, rule.allowedTags);

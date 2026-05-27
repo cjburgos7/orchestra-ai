@@ -9,6 +9,7 @@ import { chatCompletionJSON, OrchestrationError } from "@/lib/orchestration/open
 import { isGeneratedSections } from "@/lib/orchestration/validators";
 import { fallbackSections } from "@/lib/orchestration/pipelines/section-fallback";
 import { buildProductVisuals, buildSectionGenerationContext } from "@/lib/orchestration/product-visuals";
+import { WORLD_V2_ENABLED, buildWorldV2 } from "@/lib/world-v2";
 import { resolutionCopyContext } from "@/lib/orchestration/category-resolution";
 import { imageryCopyGuard } from "@/lib/orchestration/category-imagery";
 import { resolveCategory } from "@/lib/orchestration/category-resolution";
@@ -80,13 +81,16 @@ export async function runGenerateSectionsPipeline(input: Input): Promise<Generat
     };
 
     if (isGeneratedSections(merged)) {
+      const seed = input.seed ?? `${input.brief.name}:${input.direction}`;
+      if (WORLD_V2_ENABLED) {
+        return {
+          ...merged,
+          worldV2: buildWorldV2(input.brief, seed),
+        };
+      }
       return {
         ...merged,
-        visuals: await buildProductVisuals(
-          input.brief,
-          input.seed ?? `${input.brief.name}:${input.direction}`,
-          input.direction
-        ),
+        visuals: await buildProductVisuals(input.brief, seed, input.direction),
       };
     }
   } catch (err) {
@@ -94,13 +98,14 @@ export async function runGenerateSectionsPipeline(input: Input): Promise<Generat
     console.warn("Modular generation fallback:", err);
   }
 
+  const seed = input.seed ?? `${input.brief.name}:${input.direction}`;
+  const fallback = fallbackSections(input.brief, directionLabel);
+  if (WORLD_V2_ENABLED) {
+    return { ...fallback, worldV2: buildWorldV2(input.brief, seed) };
+  }
   return {
-    ...fallbackSections(input.brief, directionLabel),
-    visuals: await buildProductVisuals(
-      input.brief,
-      input.seed ?? `${input.brief.name}:${input.direction}`,
-      input.direction
-    ),
+    ...fallback,
+    visuals: await buildProductVisuals(input.brief, seed, input.direction),
   };
 }
 

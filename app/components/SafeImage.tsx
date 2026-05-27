@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
+import { pipelineTraceEnabled } from "@/lib/pipeline-trace";
 import type { ImagerySet } from "@/lib/types/startup";
 
 type Props = {
@@ -140,6 +141,9 @@ export default function SafeImage({
 
   const onLoad = () => setStatus("loaded");
   const onError = () => {
+    if (pipelineTraceEnabled()) {
+      console.warn("[SafeImage] failed:", current, { alt, candidates: candidates.length, index });
+    }
     if (index < candidates.length - 1) {
       setIndex((i) => i + 1);
       setStatus("loading");
@@ -148,9 +152,14 @@ export default function SafeImage({
     setStatus("error");
   };
 
+  const debugStatus = !current ? "empty" : status;
+
   return (
     <div
       className={`relative overflow-hidden ${fillParent ? "absolute inset-0" : "w-full h-full min-h-[inherit]"} ${className}`}
+      data-safe-image
+      data-safe-image-src={current}
+      data-safe-image-status={debugStatus}
     >
       <div
         className="absolute inset-0 z-[1] transition-opacity duration-300"
@@ -179,7 +188,7 @@ export default function SafeImage({
         }
         className={[
           "relative z-[2] transition-opacity duration-500",
-          status === "loaded" ? "opacity-100" : "opacity-0",
+          status === "loaded" ? "opacity-100" : "opacity-40",
           useFill ? "object-cover" : "h-full w-full object-cover",
         ]
           .filter(Boolean)

@@ -223,7 +223,7 @@ const WORLDS: Record<ProductCategory, CategoryWorld> = {
       ],
       lifestyle: [
         "1519996529221-4a0f8c4d7d6e",
-        "1571771894821-ce9b6d11b08e",
+        "1619560669181-d72360947df1",
         "1498837167922-ddd27545d399",
         "1546548970-f6a0c97ca1e6",
       ],
@@ -233,7 +233,7 @@ const WORLDS: Record<ProductCategory, CategoryWorld> = {
         "1487700174473-bd5a8d0b4723",
         "1540423133010-7117160ca44c",
         "1610837524703-040399967cf0",
-        "1571771894821-ce9b6d11b08e",
+        "1619560669181-d72360947df1",
       ],
     },
     productSets: [

@@ -6,8 +6,8 @@ import type { DirectionId, StartupBrief, StartupProject, GeneratedSections } fro
 import { briefFromProject } from "@/lib/types/startup";
 import { assignSlug, saveProject } from "@/lib/persistence/projects";
 import { generatePages } from "@/lib/orchestration/pipelines/generate-pages";
+import { DEFAULT_DIRECTION } from "@/lib/cinematic";
 import { pickWildcards } from "@/lib/orchestration/wildcards";
-import LandingPagePreview from "./LandingPagePreview";
 
 const LOADING_STEPS = [
   "Reading your idea…",
@@ -94,7 +94,7 @@ export default function StartupGenerator() {
     }
   }
 
-  async function handleContinue(direction: DirectionId) {
+  async function handleContinue(direction: DirectionId = DEFAULT_DIRECTION) {
     if (!brief || !project) return;
     setContinuing(true);
     setExpandStep(0);
@@ -339,18 +339,53 @@ export default function StartupGenerator() {
               </div>
             </div>
 
-            <div className="max-w-5xl mx-auto pt-4 -mx-2 px-2">
-              <LandingPagePreview
-                brief={brief}
-                seed={project?.id ?? brief.name}
-                wildcardDirections={project?.wildcardDirections}
-                onContinue={handleContinue}
-                continuing={continuing}
-              />
+            <div
+              className="rounded-3xl border border-slate-800 bg-gradient-to-br from-[#080908] via-[#0f0f12] to-[#1a1020] p-8 md:p-10 shadow-xl animate-fade-up overflow-hidden relative"
+              style={{ animationDelay: "360ms" }}
+            >
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_80%,rgba(200,90,21,0.15),transparent_55%)] pointer-events-none" />
+              <div className="relative">
+                <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-white/40 mb-4">
+                  Cinematic world engine
+                </p>
+                <h4 className="text-2xl md:text-3xl font-serif font-light text-[#F5F2EC] tracking-tight mb-3 max-w-xl">
+                  One immersive, image-led world — art directed from your idea.
+                </h4>
+                <p className="text-sm md:text-base text-white/50 max-w-lg leading-relaxed mb-8">
+                  Orchestra is concentrating on depth: fullscreen scenes, category-native photography,
+                  and emotionally coherent scroll — not six surface-level templates.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleContinue()}
+                  disabled={continuing}
+                  className="inline-flex items-center justify-center gap-2 bg-[#F5F2EC] text-[#080908] px-7 py-3.5 rounded-full font-bold text-sm hover:bg-white transition-colors disabled:opacity-70 disabled:cursor-wait"
+                >
+                  {continuing ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-[#080908]/20 border-t-[#080908] rounded-full animate-spin" />
+                      Composing your world…
+                    </>
+                  ) : (
+                    <>
+                      Open cinematic world
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                        <path
+                          d="M3 8h10M9 4l4 4-4 4"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             <p className="text-center text-[13px] text-slate-400 pt-2">
-              Pick a direction — Orchestra will open your dedicated project page.
+              Direction styles are paused — every startup gets the unified cinematic engine first.
             </p>
           </div>
         )}

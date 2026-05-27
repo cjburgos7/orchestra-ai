@@ -13,6 +13,16 @@ import {
   resolveWorldDNA,
   worldDNALLMContext,
 } from "@/lib/orchestration/world-dna";
+import { applyDirectionEngineLayout } from "@/lib/direction-engine/registry";
+import {
+  createWorldDNA,
+  briefToRawInput,
+  toDirectionKey,
+  storyArcToSectionOrder,
+} from "@/lib/world-intelligence";
+import { buildCreativeDirection } from "@/lib/creative-direction";
+import { creativeMotionProfile } from "@/lib/creative-direction/premium-dark-bridge";
+import { resolveRenderDirection, usesCreativeDirectionEngine } from "@/lib/cinematic";
 import type { CreativeLayoutConfig } from "@/lib/types/startup";
 
 function hashSeed(seed: string): number {
@@ -82,14 +92,50 @@ function buildVisualsCore(
   seed: string,
   direction: DirectionId = "orchestra"
 ) {
+  direction = resolveRenderDirection(direction);
   const resolution = resolveCategory(brief);
   const dna = resolveWorldDNA(brief, resolution);
   const productCategory = resolution.primary;
   const world = getCategoryWorld(productCategory);
   const accentColor = pickAccent(productCategory, seed);
-  const motion = pickMotion(productCategory, direction, dna.motionStyle);
   let layout = resolveCreativeLayout(brief, direction, seed);
   layout = applyWorldDNAToLayout(layout, dna);
+  layout = applyDirectionEngineLayout(direction, layout);
+
+  const creativeDirection = usesCreativeDirectionEngine(direction)
+    ? buildCreativeDirection(brief, direction, accentColor, seed)
+    : undefined;
+
+  if (creativeDirection?.sectionOrder?.length) {
+    layout = {
+      ...layout,
+      sectionOrder: creativeDirection.sectionOrder,
+      sectionGap:
+        creativeDirection.visualDNA.layout.sectionSpacing.includes("vh")
+          ? `py-20 md:py-28`
+          : layout.sectionGap,
+      showLifestyle: creativeDirection.visualDNA.layout.imageDominance >= 0.65,
+      imageFeatures: creativeDirection.visualDNA.pacing.sectionPattern.some(
+        (b) => b.mediaPresence === "dominant" || b.mediaPresence === "overwhelming"
+      ),
+    };
+  } else {
+    const rawInput = briefToRawInput(brief);
+    const worldIntel = createWorldDNA(brief.name, rawInput, `${seed}:${direction}`);
+    const arcOrder = storyArcToSectionOrder(worldIntel.category, toDirectionKey(direction));
+    if (arcOrder?.length) {
+      layout = { ...layout, sectionOrder: arcOrder };
+    }
+  }
+
+  const motion =
+    creativeDirection != null
+      ? creativeMotionProfile(creativeDirection)
+      : pickMotion(productCategory, direction, dna.motionStyle);
+
+  const imagerySeed = creativeDirection
+    ? `${seed}:${creativeDirection.conceptKey}`
+    : imagerySessionSeed(seed, direction);
 
   return {
     productCategory,
@@ -108,6 +154,8 @@ function buildVisualsCore(
     logo: generateLogo(brief, direction, accentColor, seed),
     resolution,
     dna,
+    creativeDirection,
+    imagerySeed,
   };
 }
 
@@ -123,7 +171,7 @@ export async function buildProductVisuals(
   const core = buildVisualsCore(brief, seed, direction);
   const imagery = await buildImageryFromPipeline(
     brief,
-    imagerySessionSeed(seed, direction),
+    core.imagerySeed,
     direction,
     core.accentColor
   );
@@ -143,7 +191,7 @@ export function buildProductVisualsSync(
   const core = buildVisualsCore(brief, seed, direction);
   const { imagery } = buildArtDirectedImagery(
     brief,
-    imagerySessionSeed(seed, direction),
+    core.imagerySeed,
     direction,
     core.accentColor,
     core.resolution

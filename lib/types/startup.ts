@@ -222,6 +222,8 @@ export type SiteVisuals = {
   motionLayers?: import("@/lib/imagery/image-types").MotionLayer[];
   /** Layout density to prevent dead space */
   densityRules?: import("@/lib/imagery/image-types").LayoutDensityRules;
+  /** Premium Dark only — concept-first creative direction layer */
+  creativeDirection?: import("@/lib/creative-direction").CreativeDirectionPackage;
 };
 
 /** Modular website sections (home page) */
@@ -247,6 +249,8 @@ export type GeneratedSections = {
   cta: { headline: string; subheadline: string; buttonText: string };
   footer: { tagline: string };
   visuals?: SiteVisuals;
+  /** Isolated World V2 package — when present, ONLY GeneratedWorldV2 renders home */
+  worldV2?: import("@/lib/world-v2").WorldV2Package;
 };
 
 export type AboutPage = {

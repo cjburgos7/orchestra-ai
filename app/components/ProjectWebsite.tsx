@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DirectionId, GeneratedPages, GeneratedSections, SitePageId, StartupBrief } from "@/lib/types/startup";
+import { resolveRenderDirection } from "@/lib/cinematic";
 import { DIRECTION_THEMES } from "@/lib/orchestration/direction-themes";
-import { getDirectionLabel } from "@/lib/orchestration/directions";
 import { generatePages } from "@/lib/orchestration/pipelines/generate-pages";
+import { WORLD_V2_ENABLED } from "@/lib/world-v2";
 import SiteNavigation from "./SiteNavigation";
 import { ProjectMotionStyles } from "./VisualMotion";
 import { renderSitePage } from "./SitePageViews";
@@ -40,10 +41,12 @@ export default function ProjectWebsite({
   const activePage = controlledPage ?? internalPage;
   const setActivePage = onPageChange ?? setInternalPage;
 
-  const theme = DIRECTION_THEMES[direction];
+  const renderDirection = resolveRenderDirection(direction);
+  const theme = DIRECTION_THEMES[renderDirection];
   const isPreview = variant === "preview";
   const pages = pagesProp ?? generatePages(brief, sections);
-  const accentColor = sections.visuals?.accentColor ?? "#2563eb";
+  const accentColor =
+    sections.worldV2?.accentColor ?? sections.visuals?.accentColor ?? "#2563eb";
   const logo = sections.visuals?.logo;
   const slug = brief.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
@@ -61,6 +64,8 @@ export default function ProjectWebsite({
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
+  const isWorldV2Home = WORLD_V2_ENABLED && !!sections.worldV2 && activePage === "home";
+
   const shell = isPreview
     ? "rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden"
     : "";
@@ -70,7 +75,7 @@ export default function ProjectWebsite({
     sections,
     pages,
     theme,
-    direction,
+    direction: renderDirection,
     isPreview,
     accentColor,
     onSectionJump: handleSectionJump,
@@ -95,32 +100,37 @@ export default function ProjectWebsite({
 
       <div
         ref={scrollRef}
-        className={`${theme.page} ${isPreview ? "max-h-[640px] overflow-y-auto direction-scroll relative" : "min-h-0"}`}
+        data-orchestra-scroll-root
+        className={`${isWorldV2Home ? "" : theme.page} ${isPreview ? "max-h-[640px] overflow-y-auto direction-scroll relative" : "min-h-screen"}`}
       >
-        <SiteNavigation
-          brandLabel={sections.navbar.brandLabel}
-          ctaLabel={sections.navbar.ctaLabel}
-          logo={logo}
-          theme={theme}
-          activePage={activePage}
-          onPageChange={setActivePage}
-          onSectionJump={handleSectionJump}
-          scrollContainerRef={scrollRef}
-          showOrchestraLinks={showOrchestraLinks && !isPreview}
-          projectSlug={projectSlug}
-          embedded={isPreview || showOrchestraLinks}
-        />
+        {!isWorldV2Home && (
+          <SiteNavigation
+            brandLabel={sections.navbar.brandLabel}
+            ctaLabel={sections.navbar.ctaLabel}
+            logo={logo}
+            theme={theme}
+            activePage={activePage}
+            onPageChange={setActivePage}
+            onSectionJump={handleSectionJump}
+            scrollContainerRef={scrollRef}
+            showOrchestraLinks={showOrchestraLinks && !isPreview}
+            projectSlug={projectSlug}
+            embedded={isPreview || showOrchestraLinks}
+          />
+        )}
 
-        <main className="animate-fade-up">{renderSitePage(activePage, pageProps)}</main>
+        <main className={isWorldV2Home ? "" : "animate-fade-up"}>{renderSitePage(activePage, pageProps)}</main>
 
-        <footer className={`text-center text-xs py-8 border-t ${theme.footer}`}>
-          {sections.footer.tagline}
-          {!isPreview && (
-            <p className="mt-2 opacity-60">
-              {getDirectionLabel(direction)} · Orchestra workspace
-            </p>
-          )}
-        </footer>
+        {!isWorldV2Home && (
+          <footer className={`text-center text-xs py-8 border-t ${theme.footer}`}>
+            {sections.footer.tagline}
+            {!isPreview && (
+              <p className="mt-2 opacity-60">
+                Cinematic world · Orchestra workspace
+              </p>
+            )}
+          </footer>
+        )}
       </div>
     </div>
   );

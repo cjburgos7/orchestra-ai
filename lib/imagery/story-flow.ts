@@ -66,8 +66,8 @@ export function storyRoleForSlot(
     "product-1": 2,
     "product-2": 3,
     "feature-0": 4,
-    "feature-1": 6,
-    "feature-2": 7,
+    "feature-1": 5,
+    "feature-2": 6,
     "ambient-0": 8,
     "ambient-1": 9,
   };

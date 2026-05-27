@@ -11,6 +11,9 @@ import { LifestyleSection, ProductShowcaseSection, StorySection, CollectionSecti
 import { AnalyticsDashboardSection, PlatformShowcaseSection, MetricsBandSection, SeasonalDropsSection } from "./CategoryNativeSections";
 import SafeImage from "./SafeImage";
 import { MotionRoot, Reveal, HoverLift, StaggerSection } from "./VisualMotion";
+import CinematicWorld from "./cinematic/CinematicWorld";
+import { isPremiumDarkDirection } from "@/lib/cinematic";
+import { hasDirectionEngine } from "@/lib/direction-engine/registry";
 
 type Props = {
   brief: StartupBrief;
@@ -45,6 +48,22 @@ export function LayoutHomePage({
   const motion = visuals?.motion ?? "calm";
   const imageryOnly = visuals?.imageryOnly ?? false;
   const treatment = resolvePhotoTreatment(direction);
+
+  // Premium Dark is an opt-in cinematic flavor — default orchestra uses the rich layout below
+  if (isPremiumDarkDirection(direction) && hasDirectionEngine(direction)) {
+    return (
+      <CinematicWorld
+        brief={brief}
+        sections={sections}
+        theme={theme}
+        direction={direction}
+        isPreview={isPreview}
+        accentColor={accentColor}
+        logo={logo}
+        seed={seed}
+      />
+    );
+  }
 
   const showProductUI = !imageryOnly;
 

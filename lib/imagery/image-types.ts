@@ -87,4 +87,6 @@ export interface ArtDirectedImageryMeta {
   densityRules: LayoutDensityRules;
   motionLayers: MotionLayer[];
   selectedImageIds: string[];
+  /** Dev diagnostics — full slot pick trace */
+  pipelineTrace?: import("@/lib/pipeline-trace").PipelineTrace;
 }

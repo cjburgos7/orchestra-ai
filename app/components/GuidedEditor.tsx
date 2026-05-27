@@ -14,6 +14,7 @@ import { buildDirectionOptions } from "@/lib/orchestration/directions";
 import { pickWildcards } from "@/lib/orchestration/wildcards";
 import { buildProductVisualsSync } from "@/lib/orchestration/product-visuals";
 import { saveProject } from "@/lib/persistence/projects";
+import { CINEMATIC_DIRECTION, isCinematicEngineActive, resolveRenderDirection } from "@/lib/cinematic";
 
 const ACCENT_SWATCHES = ["#2563eb", "#7c3aed", "#0891b2", "#db2777", "#059669", "#ea580c", "#0f172a"];
 
@@ -44,7 +45,7 @@ export default function GuidedEditor({
 
   const brief = briefFromProject(project);
   const sections = project.generatedSections!;
-  const direction = project.selectedDirection ?? "orchestra";
+  const direction = resolveRenderDirection(project.selectedDirection);
   const wildcards = project.wildcardDirections ?? pickWildcards(project.id);
   const directionOptions = buildDirectionOptions(wildcards);
 
@@ -87,7 +88,7 @@ export default function GuidedEditor({
     const current = projectRef.current;
     const currentSections = current.generatedSections!;
     const currentBrief = briefFromProject(current);
-    const currentDirection = current.selectedDirection ?? "orchestra";
+    const currentDirection = resolveRenderDirection(current.selectedDirection);
 
     setRegenerating(section);
     try {
@@ -371,23 +372,30 @@ export default function GuidedEditor({
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
                 Visual direction
               </span>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {directionOptions.map((d) => (
-                  <button
-                    key={d.id}
-                    type="button"
-                    onClick={() => switchDirection(d.id as DirectionId)}
-                    className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all ${
-                      direction === d.id
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
-                    }`}
-                  >
-                    {d.label}
-                    {d.isWildcard && " ✦"}
-                  </button>
-                ))}
-              </div>
+              {isCinematicEngineActive() ? (
+                <p className="mt-2 text-[12px] text-slate-600 leading-relaxed rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
+                  <span className="font-semibold text-slate-800">Cinematic engine</span> — direction styles
+                  are paused while Orchestra concentrates on one image-led world. Accent color still applies.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {directionOptions.map((d) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => switchDirection(d.id as DirectionId)}
+                      className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all ${
+                        direction === d.id
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                      }`}
+                    >
+                      {d.label}
+                      {d.isWildcard && " ✦"}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">

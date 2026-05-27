@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { DirectionId, StartupBrief } from "@/lib/types/startup";
 import { buildDirectionOptions } from "@/lib/orchestration/directions";
 import { pickWildcards } from "@/lib/orchestration/wildcards";
-import DirectionPreviewEngine, { DirectionPreviewFooter } from "./DirectionPreviewEngine";
+import DirectionThumbnailCard from "./DirectionThumbnailCard";
 
 const EXPLORE_LABELS = [
   "Exploring creative directions…",
@@ -127,39 +127,25 @@ export default function LandingPagePreview({ brief, seed, wildcardDirections, on
                   isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6 pointer-events-none"
                 }`}
               >
-                <button
-                  type="button"
-                  onClick={() => setSelected(direction.id)}
-                  className={`w-full text-left rounded-2xl border-2 overflow-hidden transition-all duration-300 ${
+                <div
+                  className={`rounded-2xl border-2 overflow-hidden transition-all duration-300 ${
                     isSelected
                       ? "border-blue-400 shadow-xl shadow-blue-100/60 ring-2 ring-blue-100 scale-[1.02] bg-white"
                       : `${direction.accent} shadow-md hover:shadow-lg hover:-translate-y-0.5 bg-white`
                   }`}
                 >
-                  <div className="px-3.5 py-2.5 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-bold text-slate-800 truncate">
-                        {direction.label}
-                        {direction.isWildcard && " ✦"}
-                      </p>
-                      <p className="text-[10px] text-slate-400 truncate">{direction.tagline}</p>
-                    </div>
-                    {isSelected && (
-                      <span className="flex-shrink-0 text-[9px] font-bold uppercase tracking-wide text-green-700 bg-green-50 border border-green-100 rounded-full px-2 py-0.5">
-                        Selected
-                      </span>
-                    )}
-                  </div>
-
-                  <DirectionPreviewEngine
+                  <DirectionThumbnailCard
                     direction={direction.id}
                     brief={brief}
                     seed={seed}
-                    slug={slug}
+                    isSelected={isSelected}
+                    onSelect={() => setSelected(direction.id)}
                     assembled={isVisible && step >= Math.min(index + 2, 5)}
                   />
-                  <DirectionPreviewFooter slug={slug} />
-                </button>
+                  <p className="text-[10px] text-slate-400 text-center py-2 border-t border-slate-100 bg-slate-50/80">
+                    {slug}.orchestra.app
+                  </p>
+                </div>
               </div>
             );
           })}

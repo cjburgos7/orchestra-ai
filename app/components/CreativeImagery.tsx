@@ -119,7 +119,7 @@ export function LifestyleGrid({
   category?: ProductCategory;
   direction?: DirectionId;
 }) {
-  const imgs = imagery.lifestyle.slice(0, 6);
+  const imgs = imagery.lifestyle.filter((u) => u.startsWith("http")).slice(0, 6);
   const isEditorial = direction === "luxury-editorial" || direction === "minimal-luxury" || direction === "fashion-ai";
 
   if (isEditorial) {

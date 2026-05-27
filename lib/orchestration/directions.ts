@@ -13,14 +13,14 @@ export type DirectionMeta = {
 export const CORE_DIRECTIONS: DirectionMeta[] = [
   {
     id: "orchestra",
-    label: "Orchestra Style",
-    tagline: "Calm, premium, trustworthy SaaS",
+    label: "Premium Modern",
+    tagline: "Image-led · interactive · agency-grade",
     accent: "border-blue-100 hover:border-blue-200",
   },
   {
     id: "premium-dark",
     label: "Premium Dark",
-    tagline: "Luxury AI · cinematic contrast",
+    tagline: "Optional · moody cinematic contrast",
     accent: "border-slate-700 hover:border-slate-600",
   },
   {

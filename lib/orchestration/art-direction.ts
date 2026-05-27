@@ -20,12 +20,12 @@ export type PhotoTreatment = {
 const TREATMENTS: Partial<Record<DirectionId, PhotoTreatment>> = {
   orchestra: {
     scrim: "editorial",
-    meshOpacity: 0.08,
-    blackOverlay: 0.35,
-    vignette: true,
+    meshOpacity: 0.1,
+    blackOverlay: 0.22,
+    vignette: false,
     grain: false,
     kenBurns: true,
-    heroMinHeight: "min-h-[68vh] md:min-h-[78vh]",
+    heroMinHeight: "min-h-[72vh] md:min-h-[82vh]",
     headlineTracking: "tracking-tight",
     ctaStyle: "pill",
   },

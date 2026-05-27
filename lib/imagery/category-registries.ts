@@ -63,27 +63,32 @@ function buildRegistry(category: string, defs: ImageDef[]): CategoryImageRegistr
   return registry;
 }
 
-/** Fruit-native dataset — expanded pool, no people/editorial leakage */
+/** Fruit-native dataset — HTTP-verified Unsplash IDs only (May 2026 probe) */
 export const FRUIT_REGISTRY: CategoryImageRegistry = buildRegistry("fruit", [
-  { id: "1610837524703-040399967cf0", role: "hero", tags: ["orchard", "harvest", "cinematic"], orientation: "landscape", mood: ["warm", "cinematic"], dominantColor: "c2410c", composition: "wide" },
-  { id: "1566385101042-f4671190a963", role: "hero", tags: ["produce", "market", "colorful"], orientation: "landscape", mood: ["vibrant", "fresh"], dominantColor: "65a30d", composition: "wide" },
-  { id: "1487700174473-bd5a8d0b4723", role: "hero", tags: ["citrus", "oranges", "farm"], orientation: "landscape", mood: ["golden", "seasonal"], dominantColor: "ea580c", composition: "wide" },
-  { id: "1610879246508-63206585852", role: "product", tags: ["subscription box", "packaging", "crate"], orientation: "portrait", mood: ["premium", "clean"], dominantColor: "92400e", composition: "tight" },
-  { id: "1540423133010-7117160ca44c", role: "product", tags: ["fruit box", "berries", "assortment"], orientation: "square", mood: ["colorful", "product"], dominantColor: "dc2626", composition: "tight" },
-  { id: "1519996529221-4a0f8c4d7d6e", role: "product", tags: ["smoothie", "juice", "bottle"], orientation: "portrait", mood: ["fresh", "healthy"], dominantColor: "15803d", composition: "tight" },
-  { id: "1619560669181-d72360947df1", role: "product", tags: ["banana", "bunch", "produce"], orientation: "portrait", mood: ["bright", "product"], dominantColor: "fde047", composition: "tight" },
+  { id: "1732959409019-b5979266d02d", role: "hero", tags: ["oranges", "citrus", "market baskets"], orientation: "landscape", mood: ["warm", "cinematic"], dominantColor: "ea580c", composition: "wide" },
+  { id: "1498579397066-22750a3cb424", role: "hero", tags: ["produce stand", "market", "harvest"], orientation: "landscape", mood: ["vibrant", "fresh"], dominantColor: "65a30d", composition: "wide" },
+  { id: "1565299624946-b28f40a0ae38", role: "hero", tags: ["produce", "fruit assortment", "farm"], orientation: "landscape", mood: ["golden", "seasonal"], dominantColor: "ca8a04", composition: "wide" },
+  { id: "1487376480913-24046456a727", role: "hero", tags: ["citrus", "flat lay", "produce"], orientation: "landscape", mood: ["editorial", "colorful"], dominantColor: "facc15", composition: "wide" },
+  { id: "1560761098-21f5722ecb14", role: "hero", tags: ["fruit display", "market", "colorful"], orientation: "landscape", mood: ["vivid", "fresh"], dominantColor: "dc2626", composition: "wide" },
+  { id: "1628689469838-524a4a973b8e", role: "product", tags: ["fruit basket", "assortment", "crate"], orientation: "portrait", mood: ["premium", "clean"], dominantColor: "92400e", composition: "tight" },
+  { id: "1619566636858-adf3ef46400b", role: "product", tags: ["apples", "produce basket", "farm box"], orientation: "square", mood: ["colorful", "product"], dominantColor: "84cc16", composition: "tight" },
+  { id: "1518791841217-8f162f1e1131", role: "product", tags: ["fruit box", "packaging", "subscription box"], orientation: "portrait", mood: ["fresh", "healthy"], dominantColor: "15803d", composition: "tight" },
+  { id: "1416879595882-3373a0480b5b", role: "product", tags: ["berries", "produce", "packaging"], orientation: "portrait", mood: ["bright", "product"], dominantColor: "b91c1c", composition: "tight" },
+  { id: "1658431618300-a69b07fb5782", role: "product", tags: ["fruit plate", "assortment", "produce"], orientation: "portrait", mood: ["premium", "clean"], dominantColor: "fde047", composition: "tight" },
   { id: "1464965911861-746a04b4bca6", role: "macro", tags: ["strawberry", "berries", "macro"], orientation: "square", mood: ["intimate", "vivid"], dominantColor: "b91c1c", composition: "detail" },
   { id: "1512621776951-a57141f2eefd", role: "macro", tags: ["citrus", "orange", "slice"], orientation: "square", mood: ["bright", "juicy"], dominantColor: "f97316", composition: "detail" },
   { id: "1558618666-fcd25c85cd64", role: "macro", tags: ["apple", "harvest", "macro"], orientation: "portrait", mood: ["rustic", "natural"], dominantColor: "84cc16", composition: "detail" },
-  { id: "1590301153679-914d4960b148", role: "macro", tags: ["grapes", "vineyard", "macro"], orientation: "portrait", mood: ["rich", "detail"], dominantColor: "7c3aed", composition: "detail" },
-  { id: "1622205540746-e037e228e7a1", role: "macro", tags: ["watermelon", "slice", "summer"], orientation: "square", mood: ["vivid", "fresh"], dominantColor: "ef4444", composition: "detail" },
-  { id: "1571771894821-ce9b6d11b08e", role: "editorial", tags: ["farm", "sourcing", "harvest"], orientation: "landscape", mood: ["documentary", "editorial"], dominantColor: "a3a3a3", composition: "wide" },
-  { id: "1498837167922-ddd27545d399", role: "editorial", tags: ["farmers market", "vendor", "produce"], orientation: "landscape", mood: ["lively", "local"], dominantColor: "ca8a04", composition: "wide" },
-  { id: "1603833699256-2d8ab5e73807", role: "editorial", tags: ["produce flat lay", "assortment", "farm"], orientation: "landscape", mood: ["editorial", "colorful"], dominantColor: "facc15", composition: "wide" },
+  { id: "1610832958506-aa56368176cf", role: "macro", tags: ["citrus", "oranges", "macro"], orientation: "square", mood: ["rich", "detail"], dominantColor: "ea580c", composition: "detail" },
+  { id: "1631209121750-a9f656d28f46", role: "macro", tags: ["grapes", "banana", "macro"], orientation: "square", mood: ["vivid", "fresh"], dominantColor: "7c3aed", composition: "detail" },
+  { id: "1511546865855-fe4788edf4b6", role: "editorial", tags: ["produce flat lay", "assortment", "farm"], orientation: "landscape", mood: ["editorial", "colorful"], dominantColor: "facc15", composition: "wide" },
+  { id: "1535227798054-e4373ef3795a", role: "editorial", tags: ["fruit slices", "produce", "editorial"], orientation: "landscape", mood: ["editorial", "fresh"], dominantColor: "f97316", composition: "wide" },
   { id: "1542838132-92c53300491e", role: "lifestyle", tags: ["fruit bowl", "breakfast", "morning"], orientation: "landscape", mood: ["calm", "wellness"], dominantColor: "fef3c7", composition: "wide" },
-  { id: "1490645935967-10de6ba1063e", role: "lifestyle", tags: ["smoothie bowl", "wellness"], orientation: "portrait", mood: ["bright", "healthy"], dominantColor: "86efac", composition: "tight" },
-  { id: "1502741338009-c9473472211e", role: "ambient", tags: ["market", "produce", "ambient"], orientation: "landscape", mood: ["atmospheric", "soft"], dominantColor: "fde68a", composition: "wide" },
-  { id: "1540189549336-e546e206e447", role: "ambient", tags: ["orchard", "golden hour"], orientation: "landscape", mood: ["cinematic", "dreamy"], dominantColor: "fdba74", composition: "wide" },
+  { id: "1580691155297-c6dfa3ca61c4", role: "lifestyle", tags: ["berries", "strawberries", "wellness"], orientation: "portrait", mood: ["bright", "healthy"], dominantColor: "86efac", composition: "tight" },
+  { id: "1517260739337-6799d239ce83", role: "lifestyle", tags: ["sliced fruit", "breakfast", "table"], orientation: "landscape", mood: ["calm", "wellness"], dominantColor: "fde68a", composition: "wide" },
+  { id: "1665589048355-579bc80169d1", role: "lifestyle", tags: ["fruit plate", "wellness", "morning"], orientation: "portrait", mood: ["bright", "healthy"], dominantColor: "fca5a5", composition: "tight" },
+  { id: "1552053831-71594a27632d", role: "lifestyle", tags: ["produce spread", "table", "colorful"], orientation: "landscape", mood: ["editorial", "warm"], dominantColor: "fde68a", composition: "wide" },
+  { id: "1635774855717-0aec182f92cc", role: "ambient", tags: ["produce basket", "market", "ambient"], orientation: "landscape", mood: ["atmospheric", "soft"], dominantColor: "fde68a", composition: "wide" },
+  { id: "1641642399576-487909d0ddbc", role: "ambient", tags: ["cut fruit", "produce", "ambient"], orientation: "landscape", mood: ["cinematic", "dreamy"], dominantColor: "fdba74", composition: "wide" },
 ]);
 
 /** Basketball analytics dataset */

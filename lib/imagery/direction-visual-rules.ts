@@ -6,8 +6,8 @@ const RULES: Partial<Record<DirectionId, DirectionVisualRules>> = {
     id: "premium-dark",
     preferredRoles: ["hero", "editorial", "ambient", "macro"],
     preferredMood: ["cinematic", "dramatic", "moody", "dark", "arena"],
-    saturation: -12,
-    contrast: 18,
+    saturation: -4,
+    contrast: 8,
     spacingStyle: "layered",
     compositionStyle: "cinematic",
   },
@@ -41,9 +41,9 @@ const RULES: Partial<Record<DirectionId, DirectionVisualRules>> = {
   orchestra: {
     id: "orchestra",
     preferredRoles: ["hero", "product", "editorial", "lifestyle"],
-    preferredMood: ["fresh", "premium", "editorial", "warm"],
-    saturation: 0,
-    contrast: 10,
+    preferredMood: ["fresh", "premium", "editorial", "warm", "dynamic", "vivid"],
+    saturation: 8,
+    contrast: 12,
     spacingStyle: "balanced",
     compositionStyle: "cinematic",
   },
@@ -100,7 +100,8 @@ export function applyDirectionTreatment(url: string, rules: DirectionVisualRules
   params.set("auto", "format");
   params.set("fit", "crop");
   params.set("q", "80");
-  params.set("w", String(salt > 0 ? width + salt * 20 : width));
+  const wobble = salt > 0 ? (Math.abs(salt) % 6) * 32 : 0;
+  params.set("w", String(Math.min(width + wobble, 2400)));
   if (height) params.set("h", String(height));
   if (rules.saturation !== 0) params.set("sat", String(rules.saturation));
   if (rules.contrast !== 0) params.set("con", String(rules.contrast));
