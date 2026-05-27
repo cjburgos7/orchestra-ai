@@ -100,7 +100,7 @@ const WORLDS: WorldCard[] = [
     name: "PetalPost",
     tagline: "Luxury florals, delivered",
     accent: "#6b9080",
-    image: "1490759847868-88d4476a2101",
+    image: "1558618666-fcd25c85cd64",
     bg: "#faf9f7",
     fg: "#1c1917",
     mesh: "rgba(107,144,128,0.1)",
@@ -567,34 +567,31 @@ function Particles({ count = 28 }: { count?: number }) {
 
 // ─── Orbital chrome sphere — premium object companion ────────────────────────
 
-function OrbitalSphere({
-  orbitPx, spherePx, period, startDeg, isDark, reverse = false,
+function HoverSphere({
+  spherePx, left, top, period, initY = 0, isDark, graphite = false,
 }: {
-  orbitPx: number; spherePx: number; period: number;
-  startDeg: number; isDark: boolean; reverse?: boolean;
+  spherePx: number; left: string; top: string;
+  period: number; initY?: number; isDark: boolean; graphite?: boolean;
 }) {
+  const chrome = graphite
+    ? "radial-gradient(circle at 34% 30%, rgba(190,190,210,0.90) 0%, rgba(110,110,130,0.72) 30%, rgba(48,48,62,0.78) 60%, rgba(12,10,22,0.97) 100%)"
+    : "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.97) 0%, rgba(210,210,232,0.78) 28%, rgba(140,128,185,0.55) 58%, rgba(18,14,38,0.96) 100%)";
   return (
     <motion.div
-      style={{ position: "absolute", left: "50%", top: "42%", width: 0, height: 0, transformOrigin: "0 0" }}
-      initial={{ rotate: startDeg }}
-      animate={{ rotate: reverse ? startDeg - 360 : startDeg + 360 }}
-      transition={{ duration: period, repeat: Infinity, ease: "linear" }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          width: spherePx,
-          height: spherePx,
-          left: -spherePx / 2,
-          top: -orbitPx,
-          borderRadius: "50%",
-          background: "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.97) 0%, rgba(210,210,232,0.78) 28%, rgba(140,128,185,0.55) 58%, rgba(18,14,38,0.96) 100%)",
-          boxShadow: isDark
-            ? `0 0 ${spherePx * 2.2}px rgba(120,80,220,0.17), 0 ${spherePx * 0.6}px ${spherePx * 1.4}px rgba(0,0,0,0.60)`
-            : `0 0 ${spherePx * 2.2}px rgba(80,160,240,0.13), 0 ${spherePx * 0.6}px ${spherePx * 1.4}px rgba(0,0,0,0.20)`,
-        }}
-      />
-    </motion.div>
+      style={{
+        position: "absolute", left, top,
+        width: spherePx, height: spherePx,
+        transform: "translate(-50%, -50%)",
+        borderRadius: "50%",
+        background: chrome,
+        boxShadow: isDark
+          ? `0 0 ${spherePx * 2.2}px rgba(100,70,200,0.18), 0 ${spherePx * 0.55}px ${spherePx * 1.3}px rgba(0,0,0,0.68)`
+          : `0 0 ${spherePx * 2.2}px rgba(80,160,240,0.13), 0 ${spherePx * 0.55}px ${spherePx * 1.3}px rgba(0,0,0,0.22)`,
+        pointerEvents: "none",
+      }}
+      animate={{ y: [initY, initY - 8, initY] }}
+      transition={{ duration: period, repeat: Infinity, ease: "easeInOut" }}
+    />
   );
 }
 
@@ -1109,8 +1106,8 @@ function CinematicHero() {
   const heroRef = useRef<HTMLElement>(null);
   const mouseX  = useMotionValue(0);
   const mouseY  = useMotionValue(0);
-  const smoothX = useSpring(mouseX, { stiffness: 50, damping: 18 });
-  const smoothY = useSpring(mouseY, { stiffness: 50, damping: 18 });
+  const smoothX = useSpring(mouseX, { stiffness: 35, damping: 22 });
+  const smoothY = useSpring(mouseY, { stiffness: 35, damping: 22 });
 
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -1131,10 +1128,7 @@ function CinematicHero() {
     visible: { opacity: 1, y: 0, transition: { duration: 1.1, ease: E.expo as any } },
   };
 
-  const heroBg = isDark ? "#08080f" : "#f0f4f9";
-  const glowBg = isDark
-    ? "radial-gradient(ellipse 75% 70% at 68% 50%, rgba(55,25,135,0.55) 0%, rgba(20,10,48,0.28) 48%, transparent 72%)"
-    : "radial-gradient(ellipse 75% 70% at 68% 50%, rgba(186,230,253,0.65) 0%, rgba(224,242,254,0.38) 48%, transparent 72%)";
+  const heroBg = isDark ? "#080c14" : "#f0f4f9";
 
   return (
     <motion.section
@@ -1147,66 +1141,144 @@ function CinematicHero() {
         mouseY.set((e.clientY - r.top)  / r.height - 0.5);
       }}
     >
-      {/* Background atmosphere */}
-      <div className="absolute inset-0" style={{ background: glowBg }} />
+      {/* ── Cinematic environment layers ──────────────────────────── */}
 
-      {/* Premium central object — right half */}
+      {/* Studio depth — not pure flat black, subtle center lift */}
+      {isDark && (
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: "radial-gradient(ellipse 110% 100% at 58% 44%, rgba(14,18,32,1) 0%, rgba(8,12,20,0.6) 55%, rgba(3,5,10,1) 100%)"
+        }} />
+      )}
+
+      {/* Primary volumetric bloom — breathes slowly */}
       <motion.div
         className="absolute pointer-events-none"
         style={{
-          right: "-4%",
-          top: "50%",
+          right: "-5%", top: "0%", bottom: "0%", width: "72%",
+          background: isDark
+            ? "radial-gradient(ellipse 80% 88% at 60% 46%, rgba(36,24,100,0.62) 0%, rgba(18,12,52,0.30) 36%, rgba(10,7,28,0.14) 60%, transparent 82%)"
+            : "radial-gradient(ellipse 80% 88% at 60% 46%, rgba(186,230,253,0.60) 0%, rgba(224,242,254,0.30) 50%, transparent 78%)",
+        }}
+        animate={{ opacity: [0.82, 1, 0.82] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Secondary wide atmospheric diffuse */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: isDark
+          ? "radial-gradient(ellipse 100% 85% at 55% 50%, rgba(22,14,72,0.28) 0%, rgba(12,8,36,0.12) 48%, transparent 72%)"
+          : "radial-gradient(ellipse 100% 85% at 55% 50%, rgba(147,210,255,0.22) 0%, transparent 68%)",
+      }} />
+
+      {/* Key light suggestion — subtle upper-right studio light */}
+      {isDark && (
+        <div className="absolute pointer-events-none" style={{
+          top: "-15%", right: "-8%", width: "55%", height: "65%",
+          background: "radial-gradient(ellipse 65% 60% at 88% 18%, rgba(200,215,255,0.035) 0%, rgba(160,180,240,0.018) 35%, transparent 68%)",
+        }} />
+      )}
+
+      {/* Atmospheric ground fog — horizontal haze at lower third */}
+      {isDark && (
+        <div className="absolute pointer-events-none" style={{
+          bottom: "0%", left: "28%", right: "0%", height: "38%",
+          background: "linear-gradient(to top, rgba(4,6,14,0.88) 0%, rgba(8,10,20,0.42) 32%, transparent 68%)",
+        }} />
+      )}
+
+      {/* ── Premium cinematic object ──────────────────────────────── */}
+      <motion.div
+        className="absolute pointer-events-none"
+        style={{
+          right: "0%",
+          top: "46%",
           translateY: "-50%",
-          width: "min(60vw, 780px)",
-          height: "min(60vw, 780px)",
+          width: "min(78vw, 980px)",
+          height: "min(78vw, 980px)",
           x: objMoveX,
           y: objMoveY,
           zIndex: 2,
         }}
       >
-        {/* Deep glow field behind object */}
+        {/* Wide primary bloom — breathes in sync with atmosphere */}
+        <motion.div
+          style={{
+            position: "absolute", inset: "-22%", borderRadius: "50%",
+            filter: "blur(55px)",
+            background: isDark
+              ? "radial-gradient(circle at 50% 48%, rgba(58,32,180,0.30) 0%, rgba(28,16,90,0.15) 42%, transparent 68%)"
+              : "radial-gradient(circle at 50% 48%, rgba(147,210,255,0.36) 0%, rgba(186,230,253,0.18) 45%, transparent 68%)",
+          }}
+          animate={{ opacity: [0.82, 1, 0.82], scale: [0.97, 1, 0.97] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+
+        {/* Tight secondary bloom — hugs the object surface */}
         <div style={{
-          position: "absolute", inset: "-18%", borderRadius: "50%", filter: "blur(40px)",
+          position: "absolute", inset: "-6%", borderRadius: "50%",
+          filter: "blur(22px)",
           background: isDark
-            ? "radial-gradient(circle at 50% 50%, rgba(72,38,210,0.26) 0%, rgba(36,18,108,0.13) 45%, transparent 68%)"
-            : "radial-gradient(circle at 50% 50%, rgba(147,210,255,0.32) 0%, rgba(186,230,253,0.16) 45%, transparent 68%)",
+            ? "radial-gradient(circle at 52% 46%, rgba(70,44,200,0.20) 0%, rgba(38,22,110,0.09) 48%, transparent 70%)"
+            : "radial-gradient(circle at 52% 46%, rgba(147,210,255,0.24) 0%, transparent 65%)",
         }} />
 
-        {/* Generated cinematic object */}
+        {/* Micro-rotation wrapper — imperceptible, cinematic */}
         <motion.div
           style={{ position: "absolute", inset: 0 }}
-          initial={{ opacity: 0, scale: 0.88 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.8, ease: E.expo as any, delay: 0.25 }}
+          animate={{ rotateZ: [0, 0.35, 0, -0.35, 0] }}
+          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
         >
+          {/* Entrance animation */}
           <motion.div
             style={{ position: "absolute", inset: 0 }}
-            animate={{ y: [0, -16, 0] }}
-            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+            initial={{ opacity: 0, scale: 0.86 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 2.0, ease: E.expo as any, delay: 0.2 }}
           >
-            <Image
-              src="/hero-object.webp"
-              alt="Synthera — cinematic world object"
-              fill
-              className="object-contain"
-              priority
-              style={{ opacity: isDark ? 1 : 0.82 }}
-            />
+            {/* Cinematic float */}
+            <motion.div
+              style={{ position: "absolute", inset: 0 }}
+              animate={{ y: [0, -7, 0] }}
+              transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Image
+                src="/hero-object.webp"
+                alt="Synthera — cinematic world object"
+                fill
+                sizes="(max-width: 768px) 100vw, 78vw"
+                className="object-contain"
+                priority
+                style={{
+                  opacity: isDark ? 1 : 0.82,
+                  mixBlendMode: isDark ? "screen" : "multiply",
+                  filter: isDark ? "saturate(0.18) contrast(1.06)" : "saturate(0.5) brightness(1.08)",
+                }}
+              />
+            </motion.div>
           </motion.div>
         </motion.div>
 
-        {/* Orbital chrome spheres */}
-        <OrbitalSphere orbitPx={290} spherePx={22} period={10}  startDeg={0}   isDark={isDark} />
-        <OrbitalSphere orbitPx={340} spherePx={14} period={15}  startDeg={140} isDark={isDark} reverse />
-        <OrbitalSphere orbitPx={250} spherePx={18} period={7.5} startDeg={260} isDark={isDark} />
+        {/* Chrome spheres — fixed positions above ribbon stack, independent float */}
+        <HoverSphere spherePx={26} left="36%" top="23%" period={9}    initY={0}  isDark={isDark} graphite />
+        <HoverSphere spherePx={18} left="53%" top="16%" period={12.5} initY={-3} isDark={isDark} />
+        <HoverSphere spherePx={14} left="66%" top="27%" period={7}    initY={-5} isDark={isDark} />
 
-        {/* Ground reflection */}
+        {/* Reflective floor plane — suggests physical ground */}
         <div style={{
-          position: "absolute", bottom: "4%", left: "18%", right: "18%",
-          height: 50, filter: "blur(14px)",
+          position: "absolute", bottom: "-4%", left: "12%", right: "12%",
+          height: "18%", filter: "blur(18px)",
           background: isDark
-            ? "radial-gradient(ellipse at 50% 100%, rgba(72,38,210,0.18) 0%, transparent 70%)"
-            : "radial-gradient(ellipse at 50% 100%, rgba(147,210,255,0.20) 0%, transparent 70%)",
+            ? "radial-gradient(ellipse 90% 100% at 50% 0%, rgba(50,32,160,0.22) 0%, rgba(24,14,72,0.10) 50%, transparent 78%)"
+            : "radial-gradient(ellipse 90% 100% at 50% 0%, rgba(147,210,255,0.20) 0%, transparent 70%)",
+        }} />
+
+        {/* Contact shadow — tight glow at object base */}
+        <div style={{
+          position: "absolute", bottom: "8%", left: "26%", right: "26%",
+          height: 28, filter: "blur(10px)",
+          background: isDark
+            ? "radial-gradient(ellipse at 50% 100%, rgba(70,44,200,0.30) 0%, transparent 75%)"
+            : "radial-gradient(ellipse at 50% 100%, rgba(147,210,255,0.28) 0%, transparent 70%)",
         }} />
       </motion.div>
 
@@ -1216,7 +1288,7 @@ function CinematicHero() {
         style={{
           zIndex: 3,
           background: isDark
-            ? "linear-gradient(to right, rgba(8,8,15,1) 0%, rgba(8,8,15,0.88) 30%, rgba(8,8,15,0.38) 54%, transparent 74%)"
+            ? "linear-gradient(to right, rgba(8,12,20,1) 0%, rgba(8,12,20,0.88) 30%, rgba(8,12,20,0.38) 54%, transparent 74%)"
             : `linear-gradient(to right, ${T.bg} 0%, ${T.bg}e8 28%, ${T.bg}55 52%, transparent 72%)`,
         }}
         aria-hidden
@@ -1227,7 +1299,7 @@ function CinematicHero() {
         style={{
           zIndex: 3,
           background: isDark
-            ? "linear-gradient(to top, rgba(8,8,15,0.55) 0%, rgba(8,8,15,0.08) 24%, transparent 40%)"
+            ? "linear-gradient(to top, rgba(8,12,20,0.55) 0%, rgba(8,12,20,0.08) 24%, transparent 40%)"
             : `linear-gradient(to top, ${T.bg}80 0%, transparent 28%)`,
         }}
         aria-hidden
@@ -1395,7 +1467,7 @@ function VariantCard({
           animate={{ y: [0, -8, 0] }}
           transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
         >
-          <Image src={variant.objectSrc} fill className="object-contain" alt={variant.name} />
+          <Image src={variant.objectSrc} fill sizes="280px" className="object-contain" alt={variant.name} style={{ filter: "saturate(0.2) contrast(1.05)" }} />
         </motion.div>
       ) : (
         <motion.div
@@ -1754,13 +1826,13 @@ function EcosystemNode({
           width:  active ? 52 : 44,
           height: active ? 52 : 44,
           background: isDark
-            ? `radial-gradient(circle at 40% 40%, ${color}42 0%, ${color}14 60%, transparent)`
+            ? `radial-gradient(circle at 40% 40%, ${color}55 0%, ${color}22 60%, transparent)`
             : `rgba(255,255,255,0.72)`,
-          border: `1.5px solid ${color}${active ? (isDark ? "88" : "70") : (isDark ? "40" : "55")}`,
+          border: `1.5px solid ${color}${active ? (isDark ? "aa" : "88") : (isDark ? "62" : "66")}`,
           boxShadow: active
-            ? `0 0 24px ${color}55, 0 0 8px ${color}28`
+            ? `0 0 24px ${color}66, 0 0 8px ${color}38`
             : isDark
-              ? `0 0 6px ${color}20`
+              ? `0 0 12px ${color}32, 0 0 4px ${color}16`
               : `0 0 10px ${color}28, inset 0 0 8px ${color}10`,
           backdropFilter: isDark ? "none" : "blur(4px)",
         }}
@@ -1778,8 +1850,8 @@ function EcosystemNode({
       <span
         className="text-[8px] font-semibold uppercase tracking-wide whitespace-nowrap"
         style={{
-          color: active ? color : (isDark ? T.muted : color),
-          opacity: active ? 1 : (isDark ? 0.6 : 0.88),
+          color: active ? color : (isDark ? color : color),
+          opacity: active ? 1 : (isDark ? 0.72 : 0.88),
         }}
       >
         {tool.name}
