@@ -1119,12 +1119,12 @@ function CinematicHero() {
             />
           ) : (
             <Image
-              src={img("1501386761775-a76d33ae7f94", 2400, 1600)}
+              src="/hero-world.webp"
               alt="Cinematic cosmos environment"
               fill
               className="object-cover"
               priority
-              style={{ opacity: 0.60 }}
+              style={{ opacity: 1.0 }}
               onError={() => setHeroBgFailed(true)}
             />
           )}
@@ -1146,11 +1146,11 @@ function CinematicHero() {
         </div>
       )}
 
-      {/* ── LAYER 1.5: Nebula field — vast cosmic atmospheric depth ────────── */}
-      <NebulaField isDark={isDark} />
+      {/* ── LAYER 1.5: Nebula field — light mode only (dark uses generated image) */}
+      {!isDark && <NebulaField isDark={false} />}
 
       {/* ── LAYER 2: Star field (dark) / light rays (light) ─────────────────── */}
-      {isDark ? <StarField count={140} /> : <LightRays />}
+      {isDark ? <StarField count={80} /> : <LightRays />}
 
       {/* ── LAYER 3: Atmospheric glow orbs (mouse-reactive) ─────────────────── */}
       <motion.div
@@ -1158,12 +1158,10 @@ function CinematicHero() {
         style={{ x: orbMoveX, y: orbMoveY, zIndex: 1 }}
       >
         {isDark ? (
+          /* Dark: subtle mouse-reactive shimmer on top of generated image */
           <>
-            <Orb color={`${C.accent}55`}       size={1000} x="18%"  y="30%"  dur={14} delay={0} />
-            <Orb color="rgba(6,182,212,0.32)"  size={720}  x="75%"  y="12%"  dur={18} delay={2} />
-            <Orb color="rgba(124,58,237,0.26)" size={520}  x="88%"  y="68%"  dur={12} delay={4} />
-            <Orb color={`${C.gold}20`}          size={420}  x="46%"  y="85%"  dur={22} delay={1} />
-            <Orb color="rgba(6,182,212,0.18)"  size={320}  x="55%"  y="5%"   dur={16} delay={5} />
+            <Orb color={`${C.accent}22`}       size={900}  x="18%"  y="30%"  dur={14} delay={0} />
+            <Orb color="rgba(6,182,212,0.14)"  size={600}  x="75%"  y="12%"  dur={18} delay={2} />
           </>
         ) : (
           <>
@@ -1175,8 +1173,8 @@ function CinematicHero() {
         )}
       </motion.div>
 
-      {/* ── LAYER 3.5: Celestial glow — environmental halo at world center ────── */}
-      <CelestialGlow isDark={isDark} />
+      {/* ── LAYER 3.5: Celestial glow — light mode only ───────────────────────── */}
+      {!isDark && <CelestialGlow isDark={false} />}
 
       {/* ── LAYER 4: GIANT jellyfish environment (subtle mouse parallax) ─────── */}
       <motion.div
@@ -1197,36 +1195,27 @@ function CinematicHero() {
         <FloatingWorld x="69%" y="58%" size={190} accentColor={jfColors.primary} delay={2} />
       </motion.div>
 
-      {/* ── LAYER 4.5: Atmospheric fog — translucent depth planes ──────────── */}
-      <AtmosphericFog isDark={isDark} />
+      {/* ── LAYER 4.5: Atmospheric fog — light mode only ─────────────────────── */}
+      {!isDark && <AtmosphericFog isDark={false} />}
 
-      {/* ── LAYER 5: Cinematic depth gradient (edges in, bottom vignette) ────── */}
+      {/* ── LAYER 5: Text readability vignette ───────────────────────────────── */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: `
-            linear-gradient(to right, ${T.bg}ee 0%, ${T.bg}80 26%, ${T.bg}20 60%, transparent 100%),
-            linear-gradient(to top, ${T.bg}e0 0%, ${T.bg}48 26%, transparent 50%),
-            linear-gradient(to bottom, ${T.bg}55 0%, transparent 18%)
-          `,
+          background: isDark
+            ? /* Dark: left-side vignette only — image handles the rest */
+              `linear-gradient(to right, ${C.bg}f0 0%, ${C.bg}a0 28%, ${C.bg}30 55%, transparent 78%),
+               linear-gradient(to top, ${C.bg}c0 0%, ${C.bg}40 22%, transparent 42%)`
+            : /* Light: full cinematic edges */
+              `linear-gradient(to right, ${T.bg}ee 0%, ${T.bg}80 26%, ${T.bg}20 60%, transparent 100%),
+               linear-gradient(to top, ${T.bg}e0 0%, ${T.bg}48 26%, transparent 50%),
+               linear-gradient(to bottom, ${T.bg}55 0%, transparent 18%)`,
           zIndex: 5,
         }}
         aria-hidden
       />
 
-      {/* ── LAYER 6: Architectural grid (dark only) ──────────────────────────── */}
-      {isDark && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `linear-gradient(${C.border} 1px, transparent 1px), linear-gradient(90deg, ${C.border} 1px, transparent 1px)`,
-            backgroundSize: "80px 80px",
-            opacity: 0.22,
-            zIndex: 6,
-          }}
-          aria-hidden
-        />
-      )}
+      {/* ── LAYER 6: Architectural grid (removed for dark — generated image is primary) */}
 
       {/* ── LAYER 7: Floating particles ─────────────────────────────────────── */}
       <div style={{ position: "absolute", inset: 0, zIndex: 7, pointerEvents: "none" }}>
