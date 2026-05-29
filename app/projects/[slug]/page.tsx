@@ -1,50 +1,27 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { getProjectBySlug, migrateProject } from "@/lib/persistence/projects";
+import { notFound } from "next/navigation";
+import { getProjectFromDb } from "@/lib/db/projects";
+import { isDbConfigured } from "@/lib/db/supabase";
+import ProjectClient from "./ProjectClient";
 import type { StartupProject } from "@/lib/types/startup";
-import ProjectWorkspace from "@/app/components/ProjectWorkspace";
 
-export default function ProjectPage() {
-  const params = useParams<{ slug: string }>();
-  const router = useRouter();
-  const [project, setProject] = useState<StartupProject | null>(null);
-  const [loading, setLoading] = useState(true);
+export const dynamic = "force-dynamic";
 
-  useEffect(() => {
-    const raw = getProjectBySlug(params.slug);
-    const p = raw ? migrateProject(raw) : null;
-    setProject(p);
-    setLoading(false);
-    if (!p) return;
-    document.title = `${p.startupName} · Orchestra`;
-  }, [params.slug]);
+export default async function ProjectPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const project = await getProjectFromDb(slug);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
-        <span className="w-8 h-8 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-      </div>
-    );
-  }
+  // Only 404 if DB is configured but genuinely has no record.
+  // Without DB, let the client attempt a localStorage lookup.
+  if (!project && isDbConfigured()) notFound();
 
-  if (!project) {
-    return (
-      <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center px-6 text-center">
-        <p className="text-slate-600 mb-4">Project not found on this device.</p>
-        <Link href="/#generate" className="text-blue-600 font-semibold text-sm">
-          Create a new startup →
-        </Link>
-      </div>
-    );
-  }
-
-  if (!project.generatedSections) {
-    router.replace("/#generate");
-    return null;
-  }
-
-  return <ProjectWorkspace key={project.slug} initialProject={project} />;
+  return (
+    <ProjectClient
+      initialProject={project as StartupProject | null}
+      slug={slug}
+    />
+  );
 }

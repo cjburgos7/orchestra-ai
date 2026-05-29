@@ -1,0 +1,172 @@
+/*
+ * Lovable Design System — Orchestra
+ * Ported from https://orchestra-founder-suite.lovable.app
+ * Light-mode platinum/lavender/graphite aesthetic
+ */
+
+@font-face {
+  font-family: 'CameraPlainVariable';
+  src: url('https://cdn.gpteng.co/mcp-widgets/v1/fonts/CameraPlainVariable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Design tokens ── */
+.lovable-root {
+  --radius: 0.75rem;
+  --background: oklch(98.5% .002 270);
+  --foreground: oklch(22% .012 270);
+  --card: oklch(99.5% .001 270);
+  --card-foreground: oklch(22% .012 270);
+  --popover: oklch(99.5% .001 270);
+  --popover-foreground: oklch(22% .012 270);
+  --primary: oklch(28% .015 280);
+  --primary-foreground: oklch(98% .003 270);
+  --secondary: oklch(95.5% .004 270);
+  --secondary-foreground: oklch(28% .015 280);
+  --muted: oklch(95.5% .004 270);
+  --muted-foreground: oklch(52% .012 270);
+  --accent: oklch(84% .07 295);
+  --accent-foreground: oklch(28% .06 290);
+  --destructive: oklch(60% .18 25);
+  --border: oklch(91% .005 270);
+  --input: oklch(93% .005 270);
+  --ring: oklch(74% .085 295);
+
+  /* Brand palette */
+  --platinum: oklch(97% .003 270);
+  --silver: oklch(88% .005 270);
+  --graphite: oklch(32% .012 275);
+  --lavender: oklch(70% .11 295);
+  --lavender-soft: oklch(90% .04 295);
+
+  /* Gradients */
+  --gradient-platinum: linear-gradient(135deg, oklch(99% .002 270) 0%, oklch(95% .006 285) 50%, oklch(92% .015 295) 100%);
+  --gradient-silver: linear-gradient(180deg, oklch(97% .003 270) 0%, oklch(91% .006 280) 100%);
+  --gradient-lavender: linear-gradient(135deg, oklch(90% .045 295) 0%, oklch(76% .105 295) 100%);
+  --gradient-text: linear-gradient(135deg, oklch(28% .015 280) 0%, oklch(50% .075 295) 100%);
+
+  /* Shadows */
+  --shadow-soft: 0 1px 2px oklch(20% .01 270/.04), 0 8px 24px -8px oklch(20% .01 270/.08);
+  --shadow-elevated: 0 1px 0 oklch(100% 0 0/.8) inset, 0 1px 2px oklch(20% .01 270/.06), 0 20px 50px -20px oklch(30% .02 280/.18);
+  --shadow-glow: 0 0 0 1px oklch(70% .11 295/.3), 0 8px 40px -8px oklch(70% .11 295/.5);
+
+  /* Typography */
+  --font-serif: 'CameraPlainVariable', Georgia, serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
+
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* ── Utility classes ── */
+
+.text-display {
+  font-family: var(--font-serif);
+  letter-spacing: -0.02em;
+  font-weight: 400;
+  line-height: 0.95;
+}
+
+.text-gradient {
+  background: var(--gradient-text);
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.surface-panel {
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  backdrop-filter: blur(20px) saturate(140%);
+  box-shadow: var(--shadow-elevated);
+  background: linear-gradient(rgba(255,255,255,0.7), rgba(247,248,250,0.5));
+  border: 1px solid rgba(255,255,255,0.7);
+}
+
+.surface-card {
+  box-shadow: var(--shadow-soft);
+  background: linear-gradient(rgba(255,255,255,0.9), rgba(244,245,248,0.7));
+  border: 1px solid oklch(92% .005 270 / 0.9);
+}
+
+.grain::before {
+  content: "";
+  pointer-events: none;
+  opacity: 0.025;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  position: absolute;
+  inset: 0;
+}
+
+.animate-float-in {
+  animation: 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both float-in;
+}
+
+@keyframes float-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Staggered delays */
+.animate-float-in:nth-child(1) { animation-delay: 0ms; }
+.animate-float-in:nth-child(2) { animation-delay: 80ms; }
+.animate-float-in:nth-child(3) { animation-delay: 160ms; }
+.animate-float-in:nth-child(4) { animation-delay: 240ms; }
+.animate-float-in:nth-child(5) { animation-delay: 320ms; }
+
+/* Gradient backgrounds for icon badges */
+.bg-platinum-gradient { background: var(--gradient-platinum); }
+.bg-silver-gradient { background: var(--gradient-silver); }
+.bg-lavender-gradient { background: var(--gradient-lavender); }
+
+/* Text color shorthands */
+.text-graphite { color: var(--graphite); }
+.text-lavender { color: var(--lavender); }
+.text-muted-foreground { color: var(--muted-foreground); }
+
+/* Mono font utility */
+.text-mono { font-family: var(--font-mono); }
+
+/* Secondary surface (progress bar bg) */
+.lovable-root {
+  --secondary: oklch(95.5% .004 270);
+  --card: oklch(99.5% .001 270);
+}
+
+/* Pulsing dot animation */
+@keyframes ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Responsive workspace grid — map Tailwind col-span breakpoints */
+@media (min-width: 640px) {
+  .sm\:col-span-6  { grid-column: span 6 / span 6; }
+  .sm\:col-span-12 { grid-column: span 12 / span 12; }
+}
+@media (min-width: 1024px) {
+  .lg\:col-span-3  { grid-column: span 3 / span 3; }
+  .lg\:col-span-4  { grid-column: span 4 / span 4; }
+  .lg\:col-span-5  { grid-column: span 5 / span 5; }
+  .lg\:col-span-6  { grid-column: span 6 / span 6; }
+  .lg\:col-span-7  { grid-column: span 7 / span 7; }
+  .lg\:col-span-12 { grid-column: span 12 / span 12; }
+}
+
+/* Tailwind grid columns used in workspace */
+.col-span-12 { grid-column: span 12 / span 12; }
+
+/* Hover state helpers for chip buttons */
+.lovable-root button:hover {
+  transition: border-color 0.15s, background 0.15s;
+}

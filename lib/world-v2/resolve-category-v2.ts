@@ -18,7 +18,7 @@ const RULES: Rule[] = [
     label: "Fitness & Training",
     weight: 100,
     patterns: [
-      /\b(gym|fitness|workout|training|crossfit|HIIT|personal trainer|weightlifting|strength|cardio|athlete|bodybuilding|exercise|physical)\b/i,
+      /\b(gym|fitness|workout|crossfit|HIIT|personal trainer|weightlifting|strength|cardio|bodybuilding|exercise|physical training|weight loss|muscle|reps|sets|kettlebell|treadmill)\b/i,
     ],
   },
   {
@@ -64,8 +64,10 @@ const RULES: Rule[] = [
   {
     key: "sports",
     label: "Sports & Analytics",
-    weight: 90,
-    patterns: [/\b(basketball|soccer|football|baseball|sports analytics|arena|stadium|coaching|scouting|game film|athlete performance|team performance)\b/i],
+    weight: 108,
+    patterns: [
+      /\b(basketball|soccer|football|baseball|hockey|tennis|golf|cricket|volleyball|rugby|lacrosse|cycling|triathlon|marathon|athlete|sport|NBA|NFL|MLB|NHL|MLS|arena|stadium|court|hoop|league|team sport|coaching|scouting|game film|athlete performance|team performance|sports analytics|fan engagement|game day|playbook)\b/i,
+    ],
   },
   {
     key: "travel",
@@ -147,7 +149,20 @@ function briefText(brief: StartupBrief): string {
     .join(" ");
 }
 
+const VALID_KEYS = new Set<V2CategoryKey>([
+  "fitness", "floral", "finance", "fashion", "food", "saas",
+  "wellness", "sports", "travel", "home", "education", "health",
+  "creator", "music", "science",
+]);
+
 export function resolveCategoryV2(brief: StartupBrief): { key: V2CategoryKey; label: string; score: number } {
+  // If AI set an exact category key, trust it — highest priority
+  const aiKey = brief.startupCategory?.trim().toLowerCase() as V2CategoryKey | undefined;
+  if (aiKey && VALID_KEYS.has(aiKey)) {
+    const rule = RULES.find((r) => r.key === aiKey);
+    if (rule) return { key: aiKey, label: rule.label, score: 999 };
+  }
+
   const text = briefText(brief);
   let best: { key: V2CategoryKey; label: string; score: number } = {
     key: "saas",

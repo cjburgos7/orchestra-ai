@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   description: "Build, preview, and launch AI startups without writing code.",
 };
 
+// Preload the CameraPlainVariable variable-weight serif for the landing page
+const CAMERA_FONT_URL = "https://cdn.gpteng.co/mcp-widgets/v1/fonts/CameraPlainVariable.woff2";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,6 +31,9 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="preload" href={CAMERA_FONT_URL} as="font" type="font/woff2" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-full flex flex-col">
         <DevStaleStateGuard />
         {children}

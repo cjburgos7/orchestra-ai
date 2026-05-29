@@ -147,11 +147,12 @@ export async function runRegenerateSectionPipeline(
 function buildPrompt(brief: StartupBrief, directionLabel: string, focus: string) {
   const resolution = resolveCategory(brief);
   const worldContext = buildSectionGenerationContext(brief);
+  const worldDepth = buildWorldDepthContext(brief);
   return `${resolutionCopyContext(resolution)}
 ${imageryCopyGuard(resolution)}
 
 ${worldContext}
-
+${worldDepth}
 Startup: ${brief.name}
 Tagline: ${brief.tagline}
 Description: ${brief.description}
@@ -160,6 +161,20 @@ Direction: ${directionLabel}
 Focus: ${focus}
 
 Write believable, category-native copy aligned to the WORLD DNA above.
+Let the founder mission and brand personality shape the voice — copy should feel like it comes from a real company with conviction.
 Use the feature archetype titles as inspiration — adapt them to this specific startup.
 No markdown. No generic SaaS filler like "Simple setup" or "Smart automation".`;
+}
+
+function buildWorldDepthContext(brief: StartupBrief): string {
+  const lines: string[] = [];
+  if (brief.founderMission) lines.push(`Founder Mission: ${brief.founderMission}`);
+  if (brief.marketPositioning) lines.push(`Market Positioning: ${brief.marketPositioning}`);
+  if (brief.brandPersonality) lines.push(`Brand Personality: ${brief.brandPersonality}`);
+  if (brief.businessModel) lines.push(`Business Model: ${brief.businessModel}`);
+  if (brief.launchStrategy) lines.push(`Launch Strategy: ${brief.launchStrategy}`);
+  if (brief.whyNow) lines.push(`Why Now: ${brief.whyNow}`);
+  if (brief.competitiveEdge) lines.push(`Competitive Edge: ${brief.competitiveEdge}`);
+  if (lines.length === 0) return "";
+  return `STARTUP WORLD CONTEXT:\n${lines.join("\n")}\n`;
 }

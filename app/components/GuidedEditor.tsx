@@ -14,6 +14,7 @@ import { buildDirectionOptions } from "@/lib/orchestration/directions";
 import { pickWildcards } from "@/lib/orchestration/wildcards";
 import { buildProductVisualsSync } from "@/lib/orchestration/product-visuals";
 import { saveProject } from "@/lib/persistence/projects";
+import { saveProjectToDb } from "@/lib/db/projects";
 import { CINEMATIC_DIRECTION, isCinematicEngineActive, resolveRenderDirection } from "@/lib/cinematic";
 
 const ACCENT_SWATCHES = ["#2563eb", "#7c3aed", "#0891b2", "#db2777", "#059669", "#ea580c", "#0f172a"];
@@ -36,7 +37,9 @@ export default function GuidedEditor({
   onPanelChange,
 }: Props) {
   const [regenerating, setRegenerating] = useState<SectionKey | null>(null);
-  const [openPanelLocal, setOpenPanelLocal] = useState("brand");
+  const [openPanelLocal, setOpenPanelLocal] = useState(() =>
+    project.founderMission ? "world" : "brand"
+  );
   const openPanel = openPanelProp ?? openPanelLocal;
   const setOpenPanel = onPanelChange ?? setOpenPanelLocal;
   const abortRef = useRef<AbortController | null>(null);
@@ -53,6 +56,7 @@ export default function GuidedEditor({
     (next: StartupProject) => {
       const saved = saveProject(next);
       onUpdate(saved);
+      saveProjectToDb(saved).catch(() => {});
       return saved;
     },
     [onUpdate]
@@ -167,6 +171,7 @@ export default function GuidedEditor({
   }, []);
 
   const panels = [
+    { id: "world", label: "World" },
     { id: "brand", label: "Brand" },
     { id: "hero", label: "Hero" },
     { id: "features", label: "Features" },
@@ -177,23 +182,31 @@ export default function GuidedEditor({
   ];
 
   return (
-    <aside className="mb-6 rounded-2xl border border-blue-100 bg-white shadow-sm animate-fade-up overflow-hidden">
-      <div className="px-5 py-4 border-b border-slate-100">
-        <p className="text-[13px] font-bold text-slate-900">Guided editing</p>
-        <p className="text-[12px] text-slate-500">
+    <aside
+      className="mb-5 rounded-2xl overflow-hidden"
+      style={{ background: "oklch(99.5% .001 270)", border: "1px solid oklch(91% .005 270 / 0.9)", boxShadow: "0 1px 2px oklch(20% .01 270 / 0.04), 0 4px 16px -4px oklch(20% .01 270 / 0.06)" }}
+    >
+      <div className="px-5 py-4" style={{ borderBottom: "1px solid oklch(91% .005 270 / 0.6)" }}>
+        <p className="text-[13px] font-medium" style={{ color: "oklch(22% .012 270)", letterSpacing: "-0.02em" }}>
+          Guided editing
+        </p>
+        <p className="text-[11px] mt-0.5" style={{ color: "oklch(52% .012 270)" }}>
           Refine copy, regenerate sections, or switch direction. Auto-saved.
         </p>
       </div>
 
-      <div className="flex gap-1 px-3 py-2 overflow-x-auto border-b border-slate-50">
+      <div className="flex gap-1 px-3 py-2 overflow-x-auto" style={{ borderBottom: "1px solid oklch(91% .005 270 / 0.5)", background: "oklch(98% .001 270)" }}>
         {panels.map((p) => (
           <button
             key={p.id}
             type="button"
             onClick={() => setOpenPanel(p.id)}
-            className={`text-[11px] font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
-              openPanel === p.id ? "bg-blue-600 text-white" : "text-slate-500 hover:bg-slate-50"
-            }`}
+            className="text-[11px] font-medium px-3 py-1.5 rounded-lg whitespace-nowrap transition-all"
+            style={{
+              background: openPanel === p.id ? "oklch(90% .04 295)" : "transparent",
+              color: openPanel === p.id ? "oklch(38% .095 295)" : "oklch(52% .012 270)",
+              border: openPanel === p.id ? "1px solid oklch(82% .06 295)" : "1px solid transparent",
+            }}
           >
             {p.label}
           </button>
@@ -201,6 +214,64 @@ export default function GuidedEditor({
       </div>
 
       <div className="p-5 space-y-4 max-h-[420px] overflow-y-auto">
+        {openPanel === "world" && (
+          <>
+            <div className="rounded-xl px-4 py-3 mb-1" style={{ background: "oklch(94% .03 295)", border: "1px solid oklch(86% .05 295)" }}>
+              <p className="text-[11px] leading-relaxed" style={{ color: "oklch(42% .08 295)" }}>
+                Your startup's world — the strategic context behind the brand. Changes here sharpen all generated copy.
+              </p>
+            </div>
+            <TextareaField
+              label="Founder Mission"
+              value={project.founderMission ?? ""}
+              onChange={(v) => persist({ ...project, founderMission: v })}
+              placeholder="Why does this company exist? The founder's real conviction."
+            />
+            <TextareaField
+              label="Market Positioning"
+              value={project.marketPositioning ?? ""}
+              onChange={(v) => persist({ ...project, marketPositioning: v })}
+              placeholder="Who is this for vs. existing alternatives?"
+            />
+            <TextareaField
+              label="Brand Personality"
+              value={project.brandPersonality ?? ""}
+              onChange={(v) => persist({ ...project, brandPersonality: v })}
+              placeholder="What would this brand be like as a person?"
+            />
+            <TextareaField
+              label="Business Model"
+              value={project.businessModel ?? ""}
+              onChange={(v) => persist({ ...project, businessModel: v })}
+              placeholder="How does money flow? Revenue model and pricing strategy."
+            />
+            <TextareaField
+              label="Launch Strategy"
+              value={project.launchStrategy ?? ""}
+              onChange={(v) => persist({ ...project, launchStrategy: v })}
+              placeholder="First customers, go-to-market wedge, acquisition channel."
+            />
+            <TextareaField
+              label="Competitive Edge"
+              value={project.competitiveEdge ?? ""}
+              onChange={(v) => persist({ ...project, competitiveEdge: v })}
+              placeholder="The unfair advantage that can't be easily copied."
+            />
+            <TextareaField
+              label="Why Now"
+              value={project.whyNow ?? ""}
+              onChange={(v) => persist({ ...project, whyNow: v })}
+              placeholder="The market timing or technology shift that makes this the moment."
+            />
+            <TextareaField
+              label="Growth Opportunities"
+              value={project.growthOpportunities ?? ""}
+              onChange={(v) => persist({ ...project, growthOpportunities: v })}
+              placeholder="Adjacent markets, network effects, platform potential."
+            />
+          </>
+        )}
+
         {openPanel === "brand" && (
           <>
             <Field
@@ -270,7 +341,7 @@ export default function GuidedEditor({
               patchSections({ features: { ...sections.features, sectionTitle: v } })
             } />
             {sections.features.items.map((item, i) => (
-              <div key={i} className="rounded-xl border border-slate-100 p-3 space-y-2">
+              <div key={i} className="rounded-xl p-3 space-y-2" style={{ background: "oklch(97% .001 270)", border: "1px solid oklch(90% .005 270 / 0.8)" }}>
                 <Field label={`Feature ${i + 1} title`} value={item.title} onChange={(v) => {
                   const items = [...sections.features.items];
                   items[i] = { ...items[i], title: v };
@@ -290,7 +361,7 @@ export default function GuidedEditor({
         {openPanel === "social" && (
           <>
             {sections.testimonials.map((t, i) => (
-              <div key={i} className="rounded-xl border border-slate-100 p-3 space-y-2">
+              <div key={i} className="rounded-xl p-3 space-y-2" style={{ background: "oklch(97% .001 270)", border: "1px solid oklch(90% .005 270 / 0.8)" }}>
                 <Field label={`Quote ${i + 1}`} value={t.quote} onChange={(v) => {
                   const testimonials = [...sections.testimonials];
                   testimonials[i] = { ...t, quote: v };
@@ -323,7 +394,7 @@ export default function GuidedEditor({
               patchSections({ pricing: { ...sections.pricing, subtitle: v } })
             } />
             {project.pricing.tiers.map((tier, i) => (
-              <div key={i} className="rounded-xl border border-slate-100 p-3 space-y-2">
+              <div key={i} className="rounded-xl p-3 space-y-2" style={{ background: "oklch(97% .001 270)", border: "1px solid oklch(90% .005 270 / 0.8)" }}>
                 <Field label={`${tier.name} — name`} value={tier.name} onChange={(v) => updatePricingTier(i, "name", v)} />
                 <Field label="Price" value={tier.price} onChange={(v) => updatePricingTier(i, "price", v)} />
                 <Field label="Detail" value={tier.detail} onChange={(v) => updatePricingTier(i, "detail", v)} />
@@ -345,9 +416,9 @@ export default function GuidedEditor({
               patchSections({ cta: { ...sections.cta, buttonText: v } })
             } />
             <div>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">FAQ</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: "oklch(58% .010 270)" }}>FAQ</span>
               {sections.faq.map((item, i) => (
-                <div key={i} className="mt-2 rounded-xl border border-slate-100 p-3 space-y-2">
+                <div key={i} className="mt-2 rounded-xl p-3 space-y-2" style={{ background: "oklch(97% .001 270)", border: "1px solid oklch(90% .005 270 / 0.8)" }}>
                   <Field label="Question" value={item.question} onChange={(v) => {
                     const faq = [...sections.faq];
                     faq[i] = { ...item, question: v };
@@ -369,12 +440,15 @@ export default function GuidedEditor({
         {openPanel === "style" && (
           <>
             <div>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+              <span className="text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: "oklch(58% .010 270)" }}>
                 Visual direction
               </span>
               {isCinematicEngineActive() ? (
-                <p className="mt-2 text-[12px] text-slate-600 leading-relaxed rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
-                  <span className="font-semibold text-slate-800">Cinematic engine</span> — direction styles
+                <p
+                  className="mt-2 text-[12px] leading-relaxed rounded-xl px-3 py-2.5"
+                  style={{ background: "oklch(94% .03 295)", border: "1px solid oklch(86% .05 295)", color: "oklch(42% .08 295)" }}
+                >
+                  <span style={{ fontWeight: 600, color: "oklch(32% .012 275)" }}>Cinematic engine</span> — direction styles
                   are paused while Orchestra concentrates on one image-led world. Accent color still applies.
                 </p>
               ) : (
@@ -384,11 +458,12 @@ export default function GuidedEditor({
                       key={d.id}
                       type="button"
                       onClick={() => switchDirection(d.id as DirectionId)}
-                      className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all ${
-                        direction === d.id
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
-                      }`}
+                      className="text-[11px] font-semibold px-3 py-1.5 rounded-full transition-all"
+                      style={{
+                        background: direction === d.id ? "oklch(28% .015 280)" : "oklch(96% .002 270)",
+                        color: direction === d.id ? "oklch(98% .003 270)" : "oklch(42% .012 270)",
+                        border: direction === d.id ? "1px solid oklch(28% .015 280)" : "1px solid oklch(88% .006 270)",
+                      }}
                     >
                       {d.label}
                       {d.isWildcard && " ✦"}
@@ -398,7 +473,7 @@ export default function GuidedEditor({
               )}
             </div>
             <div>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+              <span className="text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: "oklch(58% .010 270)" }}>
                 Accent color
               </span>
               <div className="flex flex-wrap gap-2 mt-2">
@@ -407,17 +482,15 @@ export default function GuidedEditor({
                     key={c}
                     type="button"
                     onClick={() => setAccent(c)}
-                    className={`w-8 h-8 rounded-full border-2 transition-all ${
-                      sections.visuals?.accentColor === c ? "border-blue-600 scale-110" : "border-white shadow-sm"
-                    }`}
-                    style={{ backgroundColor: c }}
+                    className="w-8 h-8 rounded-full border-2 transition-all"
+                    style={{ backgroundColor: c, borderColor: sections.visuals?.accentColor === c ? "oklch(28% .015 280)" : "oklch(86% .006 270)", transform: sections.visuals?.accentColor === c ? "scale(1.15)" : "scale(1)" }}
                     aria-label={`Accent ${c}`}
                   />
                 ))}
               </div>
             </div>
             <div>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+              <span className="text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: "oklch(58% .010 270)" }}>
                 Preview page
               </span>
               <div className="flex flex-wrap gap-2 mt-2">
@@ -426,11 +499,12 @@ export default function GuidedEditor({
                     key={p}
                     type="button"
                     onClick={() => onPageChange(p)}
-                    className={`text-[11px] font-medium px-3 py-1.5 rounded-lg border capitalize ${
-                      activePage === p
-                        ? "border-blue-300 bg-blue-50 text-blue-700"
-                        : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                    }`}
+                    className="text-[11px] font-medium px-3 py-1.5 rounded-lg capitalize transition-all"
+                    style={{
+                      background: activePage === p ? "oklch(90% .04 295)" : "transparent",
+                      color: activePage === p ? "oklch(38% .095 295)" : "oklch(52% .012 270)",
+                      border: activePage === p ? "1px solid oklch(82% .06 295)" : "1px solid oklch(90% .005 270)",
+                    }}
                   >
                     {p}
                   </button>
@@ -455,11 +529,57 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">{label}</span>
+      <span
+        className="text-[10px] font-bold uppercase tracking-[0.16em] block mb-1"
+        style={{ color: "oklch(58% .010 270)" }}
+      >
+        {label}
+      </span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl px-3 py-2 text-sm focus:outline-none"
+        style={{
+          background: "oklch(97% .001 270)",
+          border: "1px solid oklch(89% .005 270)",
+          color: "oklch(22% .012 270)",
+        }}
+      />
+    </label>
+  );
+}
+
+function TextareaField({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <label className="block">
+      <span
+        className="text-[10px] font-bold uppercase tracking-[0.16em] block mb-1"
+        style={{ color: "oklch(58% .010 270)" }}
+      >
+        {label}
+      </span>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        rows={3}
+        className="w-full rounded-xl px-3 py-2 text-sm focus:outline-none resize-none"
+        style={{
+          background: "oklch(97% .001 270)",
+          border: "1px solid oklch(89% .005 270)",
+          color: "oklch(22% .012 270)",
+          lineHeight: "1.55",
+        }}
       />
     </label>
   );
@@ -479,7 +599,8 @@ function RegenButton({
       type="button"
       disabled={regenerating !== null}
       onClick={() => onRegen(section)}
-      className="text-[11px] font-medium px-3 py-1.5 rounded-lg border border-violet-200 text-violet-600 hover:bg-violet-50 disabled:opacity-50"
+      className="text-[11px] font-medium px-3 py-1.5 rounded-lg transition-all disabled:opacity-40"
+      style={{ border: "1px solid oklch(86% .05 295)", color: "oklch(38% .095 295)", background: "oklch(94% .03 295)" }}
     >
       {regenerating === section ? "Regenerating…" : `Regenerate ${section}`}
     </button>

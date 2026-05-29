@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { OrchestrationError } from "@/lib/orchestration/openai-client";
 import { runGenerateStartupPipeline } from "@/lib/orchestration/pipelines/generate-startup";
 import { validateIdea } from "@/lib/orchestration/validators";
+import { createSlug } from "@/lib/utils/slug";
+import { saveProjectToDb } from "@/lib/db/projects";
 
 export async function POST(request: Request) {
   let body: { idea?: string };
@@ -14,7 +16,17 @@ export async function POST(request: Request) {
   try {
     const idea = validateIdea(body.idea);
     const { project, brief } = await runGenerateStartupPipeline(idea);
-    return NextResponse.json({ project, brief });
+
+    // Assign a stable slug server-side (base name + first 6 chars of UUID)
+    const slug = `${createSlug(project.startupName)}-${project.id.slice(0, 6)}`;
+    const projectWithSlug = { ...project, slug };
+
+    // Persist to Supabase — non-blocking, never fails the request
+    saveProjectToDb(projectWithSlug).catch((err) =>
+      console.error("[orchestra] db save failed:", err)
+    );
+
+    return NextResponse.json({ project: projectWithSlug, brief });
   } catch (err) {
     if (err instanceof OrchestrationError) {
       return NextResponse.json({ error: err.message }, { status: err.status });

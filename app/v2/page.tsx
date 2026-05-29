@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { saveProject } from "@/lib/persistence/projects";
 import {
   motion,
   useScroll,
@@ -153,7 +155,7 @@ const VARIANTS = [
     name: "LUMINA",
     desc: "Minimal · Heavenly · White",
     accent: "#7dd3fc",
-    glow: "rgba(147,210,255,0.40)",
+    glow: "rgba(178,162,245,0.40)",
     cardBg: "#f0f7ff",
     objectSrc: null as string | null,
   },
@@ -165,22 +167,25 @@ type Theme = "dark" | "light";
 
 const DARK = C;
 const LIGHT = {
-  bg:         "#f5f9fd",
-  surface:    "#eaf3fa",
-  surfaceHi:  "#d8eaf5",
-  accent:     "#0ea5e9",
-  accentSoft: "#38bdf8",
-  gold:       "#0284c7",
-  text:       "#0c1a2e",
-  muted:      "rgba(12,26,46,0.62)",
-  faint:      "rgba(12,26,46,0.30)",
-  border:     "rgba(14,165,233,0.16)",
-  borderHi:   "rgba(14,165,233,0.28)",
+  bg:         "#faf9fc",
+  surface:    "#f2f0f8",
+  surfaceHi:  "#e8e4f4",
+  accent:     "#6d4ee6",
+  accentSoft: "#8b72ee",
+  gold:       "#7c5ef5",
+  text:       "#1a1828",
+  muted:      "rgba(26,24,40,0.52)",
+  faint:      "rgba(26,24,40,0.2)",
+  border:     "rgba(100,80,200,0.1)",
+  borderHi:   "rgba(100,80,200,0.2)",
 } as const;
 
 const ThemeCtx = React.createContext<{ theme: Theme; toggle: () => void }>({ theme: "dark", toggle: () => {} });
 const useTheme  = () => React.useContext(ThemeCtx);
 const useTokens = () => { const { theme } = useTheme(); return theme === "dark" ? DARK : LIGHT; };
+
+const GenerateCtx = React.createContext<{ openGenerate: () => void }>({ openGenerate: () => {} });
+const useGenerate = () => React.useContext(GenerateCtx);
 
 // ─── Atmospheric orbs ─────────────────────────────────────────────────────────
 
@@ -462,7 +467,7 @@ function LightRays() {
           style={{
             width: `${1.2 + (i % 3) * 0.6}px`,
             height: "170%",
-            background: `linear-gradient(to bottom, rgba(147,210,255,${0.32 + (i % 4) * 0.08}), rgba(186,230,253,0.10), transparent)`,
+            background: `linear-gradient(to bottom, rgba(178,162,245,${0.32 + (i % 4) * 0.08}), rgba(208,196,255,0.10), transparent)`,
             top: "-35%",
             left: `${25 + i * 11}%`,
             transform: `rotate(${5 + i * 3.5}deg)`,
@@ -480,7 +485,7 @@ function LightRays() {
           height: "40%",
           top: "5%",
           left: "35%",
-          background: "radial-gradient(ellipse, rgba(147,210,255,0.38) 0%, rgba(56,189,248,0.12) 55%, transparent 75%)",
+          background: "radial-gradient(ellipse, rgba(178,162,245,0.38) 0%, rgba(130,105,240,0.12) 55%, transparent 75%)",
           borderRadius: "50%",
         }}
         animate={{ opacity: [0.5, 0.85, 0.5], scale: [0.9, 1.08, 0.9] }}
@@ -493,7 +498,7 @@ function LightRays() {
           height: "35%",
           top: "30%",
           right: "5%",
-          background: "radial-gradient(ellipse, rgba(56,189,248,0.28) 0%, rgba(14,165,233,0.08) 60%, transparent 78%)",
+          background: "radial-gradient(ellipse, rgba(130,105,240,0.28) 0%, rgba(180,165,245,0.08) 60%, transparent 78%)",
           borderRadius: "50%",
         }}
         animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.12, 1] }}
@@ -547,10 +552,10 @@ function Particles({ count = 28 }: { count?: number }) {
            : i % 5 === 1 ? C.gold
            : i % 5 === 2 ? "rgba(6,182,212,0.7)"
            : "rgba(255,255,255,0.4)")
-          : (i % 5 === 0 ? "rgba(56,189,248,0.45)"
-           : i % 5 === 1 ? "rgba(147,210,255,0.40)"
+          : (i % 5 === 0 ? "rgba(130,105,240,0.45)"
+           : i % 5 === 1 ? "rgba(178,162,245,0.40)"
            : i % 5 === 2 ? "rgba(120,195,255,0.35)"
-           : "rgba(186,230,253,0.30)");
+           : "rgba(208,196,255,0.30)");
         return (
           <motion.div
             key={i}
@@ -574,24 +579,44 @@ function HoverSphere({
   period: number; initY?: number; isDark: boolean; graphite?: boolean;
 }) {
   const chrome = graphite
-    ? "radial-gradient(circle at 34% 30%, rgba(190,190,210,0.90) 0%, rgba(110,110,130,0.72) 30%, rgba(48,48,62,0.78) 60%, rgba(12,10,22,0.97) 100%)"
-    : "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.97) 0%, rgba(210,210,232,0.78) 28%, rgba(140,128,185,0.55) 58%, rgba(18,14,38,0.96) 100%)";
+    ? "radial-gradient(circle at 32% 26%, rgba(222,222,238,0.97) 0%, rgba(148,148,170,0.86) 26%, rgba(60,60,82,0.90) 56%, rgba(14,12,26,0.99) 100%)"
+    : "radial-gradient(circle at 30% 24%, rgba(255,255,255,1) 0%, rgba(240,240,255,0.96) 16%, rgba(188,185,222,0.78) 42%, rgba(78,70,130,0.62) 70%, rgba(10,8,22,0.98) 100%)";
+  const haloSize = spherePx * 3.2;
+  const haloOffset = (haloSize - spherePx) / 2;
   return (
     <motion.div
       style={{
         position: "absolute", left, top,
         width: spherePx, height: spherePx,
         transform: "translate(-50%, -50%)",
-        borderRadius: "50%",
-        background: chrome,
-        boxShadow: isDark
-          ? `0 0 ${spherePx * 2.2}px rgba(100,70,200,0.18), 0 ${spherePx * 0.55}px ${spherePx * 1.3}px rgba(0,0,0,0.68)`
-          : `0 0 ${spherePx * 2.2}px rgba(80,160,240,0.13), 0 ${spherePx * 0.55}px ${spherePx * 1.3}px rgba(0,0,0,0.22)`,
         pointerEvents: "none",
       }}
       animate={{ y: [initY, initY - 8, initY] }}
       transition={{ duration: period, repeat: Infinity, ease: "easeInOut" }}
-    />
+    >
+      {/* Atmospheric halo */}
+      {isDark && (
+        <div style={{
+          position: "absolute",
+          left: -haloOffset, top: -haloOffset,
+          width: haloSize, height: haloSize,
+          borderRadius: "50%",
+          background: graphite
+            ? `radial-gradient(circle at 50% 50%, rgba(110,80,225,${spherePx > 60 ? 0.22 : 0.12}) 0%, rgba(68,44,190,${spherePx > 60 ? 0.10 : 0.05}) 45%, transparent 70%)`
+            : `radial-gradient(circle at 50% 50%, rgba(140,110,255,${spherePx > 40 ? 0.16 : 0.09}) 0%, rgba(80,55,180,0.05) 50%, transparent 72%)`,
+          filter: `blur(${spherePx * 0.55}px)`,
+        }} />
+      )}
+      {/* Chrome sphere */}
+      <div style={{
+        position: "absolute", inset: 0,
+        borderRadius: "50%",
+        background: chrome,
+        boxShadow: isDark
+          ? `0 0 ${spherePx * 2.2}px rgba(110,80,225,0.20), 0 ${spherePx * 0.65}px ${spherePx * 2.2}px rgba(0,0,0,0.82), inset 0 ${Math.max(1, spherePx / 28)}px 0 rgba(255,255,255,0.18)`
+          : `0 0 ${spherePx * 2.2}px rgba(80,160,240,0.13), 0 ${spherePx * 0.55}px ${spherePx * 1.3}px rgba(0,0,0,0.22)`,
+      }} />
+    </motion.div>
   );
 }
 
@@ -725,13 +750,13 @@ function NebulaField({ isDark }: { isDark: boolean }) {
               top: "-20%", left: "0",
               background: `
                 radial-gradient(ellipse 78% 68% at 62% 32%,
-                  rgba(186,230,253,0.72) 0%,
-                  rgba(147,210,255,0.42) 28%,
-                  rgba(224,242,254,0.18) 58%,
+                  rgba(208,196,255,0.72) 0%,
+                  rgba(178,162,245,0.42) 28%,
+                  rgba(232,227,255,0.18) 58%,
                   transparent 78%),
                 radial-gradient(ellipse 58% 52% at 88% 52%,
-                  rgba(224,242,254,0.62) 0%,
-                  rgba(186,230,253,0.28) 42%,
+                  rgba(232,227,255,0.62) 0%,
+                  rgba(208,196,255,0.28) 42%,
                   transparent 66%)
               `,
               borderRadius: "40%",
@@ -745,8 +770,8 @@ function NebulaField({ isDark }: { isDark: boolean }) {
               width: "58%", height: "64%",
               top: "4%", right: "0%",
               background: `radial-gradient(ellipse at 50% 28%,
-                rgba(147,210,255,0.52) 0%,
-                rgba(186,230,253,0.26) 38%,
+                rgba(178,162,245,0.52) 0%,
+                rgba(208,196,255,0.26) 38%,
                 transparent 62%)`,
               filter: "blur(22px)",
             }}
@@ -782,9 +807,9 @@ function CelestialGlow({ isDark }: { isDark: boolean }) {
                 rgba(6,182,212,0.10) 38%,
                 transparent 60%)`
             : `radial-gradient(circle at center,
-                rgba(56,189,248,0.32) 0%,
-                rgba(147,210,255,0.20) 20%,
-                rgba(186,230,253,0.10) 40%,
+                rgba(130,105,240,0.32) 0%,
+                rgba(178,162,245,0.20) 20%,
+                rgba(208,196,255,0.10) 40%,
                 transparent 62%)`,
           borderRadius: "50%",
         }}
@@ -804,8 +829,8 @@ function CelestialGlow({ isDark }: { isDark: boolean }) {
                 rgba(124,58,237,0.22) 28%,
                 transparent 58%)`
             : `radial-gradient(circle at center,
-                rgba(147,210,255,0.45) 0%,
-                rgba(56,189,248,0.24) 30%,
+                rgba(178,162,245,0.45) 0%,
+                rgba(130,105,240,0.24) 30%,
                 transparent 58%)`,
           borderRadius: "50%",
         }}
@@ -842,9 +867,9 @@ function AtmosphericFog({ isDark }: { isDark: boolean }) {
                   rgba(124,58,237,${p.opacity * 0.5}) 82%,
                   transparent 100%)`
               : `linear-gradient(to right, transparent 0%,
-                  rgba(186,230,253,${p.opacity * 0.7}) 18%,
-                  rgba(147,210,255,${p.opacity}) 48%,
-                  rgba(186,230,253,${p.opacity * 0.7}) 82%,
+                  rgba(208,196,255,${p.opacity * 0.7}) 18%,
+                  rgba(178,162,245,${p.opacity}) 48%,
+                  rgba(208,196,255,${p.opacity * 0.7}) 82%,
                   transparent 100%)`,
             filter: "blur(32px)",
           }}
@@ -990,12 +1015,348 @@ function WorldImage({
   );
 }
 
+// ─── Generate Modal ───────────────────────────────────────────────────────────
+
+const PHASE1_MSGS = [
+  "Reading your idea…",
+  "Naming your startup…",
+  "Crafting your identity…",
+  "Shaping your brand…",
+];
+const PHASE2_MSGS = [
+  "Building your world…",
+  "Composing your launch page…",
+  "Rendering your universe…",
+  "Almost ready to launch…",
+];
+const PLACEHOLDERS = [
+  "A platform that helps freelancers find long-term clients.",
+  "AI tools for independent restaurant owners.",
+  "A marketplace for sustainable fashion brands.",
+  "Software that automates legal contracts for startups.",
+  "An app that turns your fitness data into a coaching plan.",
+];
+
+type GenPhase = "input" | "phase1" | "preview" | "phase2";
+
+function V2GenerateModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const router = useRouter();
+  const T = useTokens();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const [idea, setIdea] = useState("");
+  const [phase, setPhase] = useState<GenPhase>("input");
+  const [msgIdx, setMsgIdx] = useState(0);
+  const [error, setError] = useState("");
+  const [previewName, setPreviewName] = useState("");
+  const [previewTagline, setPreviewTagline] = useState("");
+  const [placeholder] = useState(() => PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
+
+  useEffect(() => {
+    if (phase !== "phase1" && phase !== "phase2") return;
+    const msgs = phase === "phase1" ? PHASE1_MSGS : PHASE2_MSGS;
+    setMsgIdx(0);
+    const id = setInterval(() => setMsgIdx((i) => (i + 1) % msgs.length), 1100);
+    return () => clearInterval(id);
+  }, [phase]);
+
+  const handleClose = useCallback(() => {
+    if (phase === "phase1" || phase === "phase2") return;
+    setPhase("input");
+    setIdea("");
+    setError("");
+    setPreviewName("");
+    setPreviewTagline("");
+    onClose();
+  }, [phase, onClose]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const text = idea.trim() || placeholder;
+    setError("");
+    setPhase("phase1");
+
+    let project: { id: string; slug: string; startupName: string; tagline: string; [key: string]: unknown } | null = null;
+    let brief: unknown = null;
+
+    try {
+      const r1 = await fetch("/api/generate-startup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idea: text }),
+      });
+      const d1 = await r1.json();
+      if (!r1.ok) { setError(d1.error ?? "Generation failed"); setPhase("input"); return; }
+      project = d1.project;
+      brief = d1.brief;
+    } catch {
+      setError("Could not reach the server."); setPhase("input"); return;
+    }
+
+    if (!project || !brief) { setError("Unexpected server response."); setPhase("input"); return; }
+
+    setPreviewName(project.startupName as string);
+    setPreviewTagline(project.tagline as string);
+    setPhase("preview");
+
+    // Small pause so the user sees the name before world generation starts
+    await new Promise((r) => setTimeout(r, 800));
+    setPhase("phase2");
+
+    try {
+      const r2 = await fetch("/api/generate-sections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brief, direction: "orchestra", seed: project.id }),
+      });
+      const d2 = await r2.json();
+      if (!r2.ok) { setError(d2.error ?? "World generation failed"); setPhase("input"); return; }
+
+      // Assemble complete project
+      const complete = {
+        ...(project as Record<string, unknown>),
+        generatedSections: d2.sections,
+        selectedDirection: "orchestra",
+        status: "complete",
+        updatedAt: new Date().toISOString(),
+      };
+
+      // 1. Save to localStorage immediately — ensures routing works without Supabase
+      saveProject(complete as Parameters<typeof saveProject>[0]);
+
+      // 2. Also persist to Supabase (no-op if unconfigured, fire-and-forget)
+      fetch("/api/save-project", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project: complete }),
+      }).catch(() => {});
+
+      router.push(`/projects/${project!.slug}`);
+    } catch {
+      setError("World generation failed. Please try again."); setPhase("input");
+    }
+  }
+
+  if (!open) return null;
+
+  const msgs = phase === "phase1" ? PHASE1_MSGS : PHASE2_MSGS;
+  const isLoading = phase === "phase1" || phase === "phase2" || phase === "preview";
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          key="gen-modal"
+          className="fixed inset-0 z-[200] flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+          onClick={handleClose}
+        >
+          {/* Atmospheric backdrop */}
+          <div className="absolute inset-0" style={{
+            background: isDark
+              ? "radial-gradient(ellipse 120% 100% at 60% 40%, rgba(60,30,160,0.55) 0%, rgba(10,6,24,0.97) 55%)"
+              : "rgba(8,6,20,0.88)",
+            backdropFilter: "blur(16px)",
+          }} />
+
+          {/* Panel */}
+          <motion.div
+            className="relative w-full max-w-xl mx-4"
+            initial={{ opacity: 0, y: 32, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.97 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: "0.2em",
+                  textTransform: "uppercase", color: T.accentSoft, opacity: 0.9,
+                }}>
+                  Orchestra · Startup Builder
+                </span>
+                <h2 style={{
+                  fontSize: "clamp(1.4rem, 4vw, 2rem)", fontWeight: 800,
+                  letterSpacing: "-0.04em", lineHeight: 1.15,
+                  color: "#fff", marginTop: 6,
+                }}>
+                  {isLoading && previewName
+                    ? <><span style={{ color: T.accentSoft }}>{previewName}</span></>
+                    : "Describe your startup"}
+                </h2>
+              </div>
+              {!isLoading && (
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  style={{
+                    width: 36, height: 36, borderRadius: "50%",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    background: "rgba(255,255,255,0.06)",
+                    color: "rgba(255,255,255,0.5)",
+                    fontSize: 18, cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
+            {/* Loading state */}
+            {isLoading ? (
+              <div className="flex flex-col items-center py-10 gap-6">
+                {/* Cinematic spinner */}
+                <div style={{ position: "relative", width: 64, height: 64 }}>
+                  <motion.div
+                    style={{
+                      position: "absolute", inset: 0, borderRadius: "50%",
+                      border: "1.5px solid rgba(124,58,237,0.15)",
+                      borderTop: `1.5px solid ${T.accent}`,
+                    }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1.4, repeat: Infinity, ease: "linear" }}
+                  />
+                  <motion.div
+                    style={{
+                      position: "absolute", inset: 10, borderRadius: "50%",
+                      border: "1px solid rgba(167,139,250,0.1)",
+                      borderBottom: "1px solid rgba(167,139,250,0.5)",
+                    }}
+                    animate={{ rotate: -360 }}
+                    transition={{ duration: 2.1, repeat: Infinity, ease: "linear" }}
+                  />
+                  <div style={{
+                    position: "absolute", inset: 0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <div style={{
+                      width: 6, height: 6, borderRadius: "50%",
+                      background: T.accent, opacity: 0.9,
+                    }} />
+                  </div>
+                </div>
+
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={`${phase}-${msgIdx}`}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 500 }}
+                  >
+                    {phase === "preview"
+                      ? previewTagline || "Your startup is forming…"
+                      : msgs[msgIdx]}
+                  </motion.p>
+                </AnimatePresence>
+
+                {phase === "phase2" && previewTagline && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    style={{
+                      fontSize: 11, letterSpacing: "0.12em",
+                      textTransform: "uppercase", color: T.accentSoft,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Building world for {previewName}
+                  </motion.p>
+                )}
+              </div>
+            ) : (
+              /* Input form */
+              <form onSubmit={handleSubmit}>
+                {error && (
+                  <div style={{
+                    background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)",
+                    borderRadius: 12, padding: "10px 14px", marginBottom: 16,
+                    fontSize: 13, color: "rgba(252,165,165,0.9)",
+                  }}>
+                    {error}
+                  </div>
+                )}
+
+                <div style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.09)",
+                  borderRadius: 18, overflow: "hidden",
+                  transition: "border-color 0.2s",
+                }}>
+                  <textarea
+                    autoFocus
+                    value={idea}
+                    onChange={(e) => setIdea(e.target.value)}
+                    placeholder={placeholder}
+                    rows={4}
+                    style={{
+                      width: "100%", resize: "none",
+                      background: "transparent",
+                      border: "none", outline: "none",
+                      padding: "20px 22px",
+                      fontSize: 16, lineHeight: 1.6,
+                      color: "#fff",
+                      fontFamily: "inherit",
+                    }}
+                  />
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "12px 16px",
+                    borderTop: "1px solid rgba(255,255,255,0.05)",
+                  }}>
+                    <span style={{
+                      fontSize: 11, color: "rgba(255,255,255,0.3)",
+                      fontWeight: 500, letterSpacing: "0.04em",
+                    }}>
+                      One sentence is enough
+                    </span>
+                    <motion.button
+                      type="submit"
+                      style={{
+                        background: T.accent, color: "#fff",
+                        border: "none", borderRadius: 30,
+                        padding: "10px 24px", fontSize: 13,
+                        fontWeight: 700, cursor: "pointer",
+                        letterSpacing: "-0.01em",
+                      }}
+                      whileHover={{ scale: 1.04, y: -1, boxShadow: `0 8px 24px ${T.accent}55` }}
+                      whileTap={{ scale: 0.97 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                    >
+                      Launch my startup →
+                    </motion.button>
+                  </div>
+                </div>
+
+                <p style={{
+                  marginTop: 14, fontSize: 11, color: "rgba(255,255,255,0.25)",
+                  textAlign: "center", letterSpacing: "0.06em",
+                }}>
+                  Generates name · tagline · features · pricing · cinematic launch page
+                </p>
+              </form>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
 function V2Nav() {
   const { theme, toggle } = useTheme();
   const T = useTokens();
   const isDark = theme === "dark";
+  const { openGenerate } = useGenerate();
   const { scrollY } = useScroll();
   const [visible, setVisible] = useState(true);
   const [scrolled, setScrolled] = useState(false);
@@ -1019,7 +1380,7 @@ function V2Nav() {
           style={{
             backdropFilter: scrolled ? "blur(20px)" : "none",
             background: scrolled
-              ? isDark ? "rgba(5,5,10,0.84)" : "rgba(250,248,245,0.92)"
+              ? isDark ? "rgba(5,5,10,0.84)" : "rgba(248,246,253,0.92)"
               : "transparent",
             borderBottom: scrolled ? `1px solid ${T.border}` : "none",
           }}
@@ -1081,13 +1442,14 @@ function V2Nav() {
             </motion.button>
 
             <motion.button
+              onClick={openGenerate}
               className="px-4 py-2 rounded-full text-xs font-bold text-white"
               style={{ background: T.accent }}
               whileHover={{ scale: 1.05, y: -1 }}
               whileTap={{ scale: 0.97 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
-              Generate World
+              Launch Startup
             </motion.button>
           </motion.div>
         </motion.header>
@@ -1102,6 +1464,8 @@ function CinematicHero() {
   const { theme } = useTheme();
   const T = useTokens();
   const isDark = theme === "dark";
+  const { openGenerate } = useGenerate();
+  const router = useRouter();
 
   const heroRef = useRef<HTMLElement>(null);
   const mouseX  = useMotionValue(0);
@@ -1128,7 +1492,7 @@ function CinematicHero() {
     visible: { opacity: 1, y: 0, transition: { duration: 1.1, ease: E.expo as any } },
   };
 
-  const heroBg = isDark ? "#080c14" : "#f0f4f9";
+  const heroBg = isDark ? "#080c14" : "#f7f5fc";
 
   return (
     <motion.section
@@ -1150,14 +1514,22 @@ function CinematicHero() {
         }} />
       )}
 
+      {/* Environment light scatter — ambient bounce from object metallic surface */}
+      {isDark && (
+        <div className="absolute pointer-events-none" style={{
+          right: "2%", top: "12%", width: "56%", height: "70%",
+          background: "radial-gradient(ellipse 68% 75% at 50% 50%, rgba(68,46,188,0.16) 0%, rgba(36,22,112,0.08) 48%, transparent 72%)",
+        }} />
+      )}
+
       {/* Primary volumetric bloom — breathes slowly */}
       <motion.div
         className="absolute pointer-events-none"
         style={{
           right: "-5%", top: "0%", bottom: "0%", width: "72%",
           background: isDark
-            ? "radial-gradient(ellipse 80% 88% at 60% 46%, rgba(36,24,100,0.62) 0%, rgba(18,12,52,0.30) 36%, rgba(10,7,28,0.14) 60%, transparent 82%)"
-            : "radial-gradient(ellipse 80% 88% at 60% 46%, rgba(186,230,253,0.60) 0%, rgba(224,242,254,0.30) 50%, transparent 78%)",
+            ? "radial-gradient(ellipse 80% 88% at 60% 46%, rgba(46,30,140,0.80) 0%, rgba(24,16,72,0.44) 34%, rgba(14,9,38,0.20) 58%, transparent 80%)"
+            : "radial-gradient(ellipse 80% 88% at 60% 46%, rgba(208,196,255,0.60) 0%, rgba(232,227,255,0.30) 50%, transparent 78%)",
         }}
         animate={{ opacity: [0.82, 1, 0.82] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -1166,15 +1538,32 @@ function CinematicHero() {
       {/* Secondary wide atmospheric diffuse */}
       <div className="absolute inset-0 pointer-events-none" style={{
         background: isDark
-          ? "radial-gradient(ellipse 100% 85% at 55% 50%, rgba(22,14,72,0.28) 0%, rgba(12,8,36,0.12) 48%, transparent 72%)"
-          : "radial-gradient(ellipse 100% 85% at 55% 50%, rgba(147,210,255,0.22) 0%, transparent 68%)",
+          ? "radial-gradient(ellipse 100% 85% at 55% 50%, rgba(28,18,90,0.34) 0%, rgba(14,9,44,0.16) 46%, transparent 70%)"
+          : "radial-gradient(ellipse 100% 85% at 55% 50%, rgba(178,162,245,0.22) 0%, transparent 68%)",
       }} />
 
       {/* Key light suggestion — subtle upper-right studio light */}
       {isDark && (
         <div className="absolute pointer-events-none" style={{
           top: "-15%", right: "-8%", width: "55%", height: "65%",
-          background: "radial-gradient(ellipse 65% 60% at 88% 18%, rgba(200,215,255,0.035) 0%, rgba(160,180,240,0.018) 35%, transparent 68%)",
+          background: "radial-gradient(ellipse 65% 60% at 88% 18%, rgba(200,215,255,0.09) 0%, rgba(160,180,240,0.045) 35%, transparent 68%)",
+        }} />
+      )}
+
+      {/* Deep corner void — upper-left pulls focus toward object */}
+      {isDark && (
+        <div className="absolute pointer-events-none" style={{
+          top: "0", left: "0", width: "40%", height: "45%",
+          background: "radial-gradient(ellipse 90% 90% at 0% 0%, rgba(2,3,8,0.70) 0%, transparent 72%)",
+        }} />
+      )}
+
+      {/* Atmospheric haze horizon — subtle mid-scene depth plane */}
+      {isDark && (
+        <div className="absolute pointer-events-none" style={{
+          top: "38%", left: "30%", right: "-2%", height: "28%",
+          background: "radial-gradient(ellipse 100% 80% at 55% 50%, rgba(50,32,150,0.10) 0%, transparent 72%)",
+          filter: "blur(40px)",
         }} />
       )}
 
@@ -1206,8 +1595,8 @@ function CinematicHero() {
             position: "absolute", inset: "-22%", borderRadius: "50%",
             filter: "blur(55px)",
             background: isDark
-              ? "radial-gradient(circle at 50% 48%, rgba(58,32,180,0.30) 0%, rgba(28,16,90,0.15) 42%, transparent 68%)"
-              : "radial-gradient(circle at 50% 48%, rgba(147,210,255,0.36) 0%, rgba(186,230,253,0.18) 45%, transparent 68%)",
+              ? "radial-gradient(circle at 50% 48%, rgba(70,46,215,0.46) 0%, rgba(36,22,112,0.24) 40%, rgba(18,11,56,0.10) 62%, transparent 80%)"
+              : "radial-gradient(circle at 50% 48%, rgba(178,162,245,0.36) 0%, rgba(208,196,255,0.18) 45%, transparent 68%)",
           }}
           animate={{ opacity: [0.82, 1, 0.82], scale: [0.97, 1, 0.97] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -1218,67 +1607,56 @@ function CinematicHero() {
           position: "absolute", inset: "-6%", borderRadius: "50%",
           filter: "blur(22px)",
           background: isDark
-            ? "radial-gradient(circle at 52% 46%, rgba(70,44,200,0.20) 0%, rgba(38,22,110,0.09) 48%, transparent 70%)"
-            : "radial-gradient(circle at 52% 46%, rgba(147,210,255,0.24) 0%, transparent 65%)",
+            ? "radial-gradient(circle at 52% 46%, rgba(88,58,232,0.32) 0%, rgba(48,28,130,0.16) 46%, transparent 70%)"
+            : "radial-gradient(circle at 52% 46%, rgba(178,162,245,0.24) 0%, transparent 65%)",
         }} />
 
-        {/* Micro-rotation wrapper — imperceptible, cinematic */}
-        <motion.div
-          style={{ position: "absolute", inset: 0 }}
-          animate={{ rotateZ: [0, 0.35, 0, -0.35, 0] }}
-          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-        >
-          {/* Entrance animation */}
+        {/* Key light source — point of origin above the sphere cluster */}
+        {isDark && (
           <motion.div
-            style={{ position: "absolute", inset: 0 }}
-            initial={{ opacity: 0, scale: 0.86 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 2.0, ease: E.expo as any, delay: 0.2 }}
-          >
-            {/* Cinematic float */}
-            <motion.div
-              style={{ position: "absolute", inset: 0 }}
-              animate={{ y: [0, -7, 0] }}
-              transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <Image
-                src="/hero-object.webp"
-                alt="Synthera — cinematic world object"
-                fill
-                sizes="(max-width: 768px) 100vw, 78vw"
-                className="object-contain"
-                priority
-                style={{
-                  opacity: isDark ? 1 : 0.82,
-                  mixBlendMode: isDark ? "screen" : "multiply",
-                  filter: isDark ? "saturate(0.18) contrast(1.06)" : "saturate(0.5) brightness(1.08)",
-                }}
-              />
-            </motion.div>
-          </motion.div>
-        </motion.div>
+            style={{
+              position: "absolute", left: "44%", top: "8%",
+              width: 280, height: 180,
+              transform: "translate(-50%, 0)",
+              background: "radial-gradient(ellipse 60% 70% at 50% 10%, rgba(200,190,255,0.13) 0%, rgba(140,110,240,0.07) 45%, transparent 75%)",
+              filter: "blur(12px)",
+            }}
+            animate={{ opacity: [0.7, 1, 0.7] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+          />
+        )}
 
-        {/* Chrome spheres — fixed positions above ribbon stack, independent float */}
-        <HoverSphere spherePx={26} left="36%" top="23%" period={9}    initY={0}  isDark={isDark} graphite />
-        <HoverSphere spherePx={18} left="53%" top="16%" period={12.5} initY={-3} isDark={isDark} />
-        <HoverSphere spherePx={14} left="66%" top="27%" period={7}    initY={-5} isDark={isDark} />
+        {/* Orbital sphere cluster — primary composition */}
+        <HoverSphere spherePx={96} left="46%" top="46%" period={14}   initY={0}  isDark={isDark} graphite />
+        <HoverSphere spherePx={56} left="70%" top="26%" period={10.5} initY={-4} isDark={isDark} />
+        <HoverSphere spherePx={36} left="76%" top="62%" period={8}    initY={-6} isDark={isDark} />
+        <HoverSphere spherePx={20} left="82%" top="18%" period={12}   initY={-2} isDark={isDark} />
 
         {/* Reflective floor plane — suggests physical ground */}
         <div style={{
-          position: "absolute", bottom: "-4%", left: "12%", right: "12%",
-          height: "18%", filter: "blur(18px)",
+          position: "absolute", bottom: "-4%", left: "10%", right: "10%",
+          height: "24%", filter: "blur(16px)",
           background: isDark
-            ? "radial-gradient(ellipse 90% 100% at 50% 0%, rgba(50,32,160,0.22) 0%, rgba(24,14,72,0.10) 50%, transparent 78%)"
-            : "radial-gradient(ellipse 90% 100% at 50% 0%, rgba(147,210,255,0.20) 0%, transparent 70%)",
+            ? "radial-gradient(ellipse 90% 100% at 50% 0%, rgba(68,44,210,0.40) 0%, rgba(36,20,110,0.22) 45%, transparent 80%)"
+            : "radial-gradient(ellipse 90% 100% at 50% 0%, rgba(178,162,245,0.20) 0%, transparent 70%)",
         }} />
+
+        {/* Floor glint — premium specular line at ground plane */}
+        {isDark && (
+          <div style={{
+            position: "absolute", bottom: "20%", left: "16%", right: "16%",
+            height: 1.5, filter: "blur(3px)",
+            background: "linear-gradient(to right, transparent 0%, rgba(120,96,255,0.20) 22%, rgba(168,145,255,0.46) 50%, rgba(120,96,255,0.20) 78%, transparent 100%)",
+          }} />
+        )}
 
         {/* Contact shadow — tight glow at object base */}
         <div style={{
-          position: "absolute", bottom: "8%", left: "26%", right: "26%",
-          height: 28, filter: "blur(10px)",
+          position: "absolute", bottom: "8%", left: "24%", right: "24%",
+          height: 36, filter: "blur(12px)",
           background: isDark
-            ? "radial-gradient(ellipse at 50% 100%, rgba(70,44,200,0.30) 0%, transparent 75%)"
-            : "radial-gradient(ellipse at 50% 100%, rgba(147,210,255,0.28) 0%, transparent 70%)",
+            ? "radial-gradient(ellipse at 50% 100%, rgba(84,54,228,0.48) 0%, rgba(44,26,122,0.24) 52%, transparent 80%)"
+            : "radial-gradient(ellipse at 50% 100%, rgba(178,162,245,0.28) 0%, transparent 70%)",
         }} />
       </motion.div>
 
@@ -1354,20 +1732,22 @@ function CinematicHero() {
           {/* Sub + CTAs */}
           <motion.div variants={item} className="flex flex-col gap-6">
             <p style={{ color: T.muted, fontSize: "clamp(0.82rem, 1.25vw, 0.97rem)", lineHeight: 1.68, maxWidth: 370 }}>
-              Orchestra generates immersive startup worlds. Each brand a distinct visual
-              universe — cinematically composed, atmospherically alive, launch-ready.
+              From idea to launch-ready startup — name, brand identity, cinematic world,
+              and a complete business presence. Built in seconds.
             </p>
             <div className="flex flex-wrap gap-3">
               <motion.button
+                onClick={openGenerate}
                 className="px-6 py-3 rounded-full text-sm font-bold text-white flex items-center gap-2"
                 style={{ background: T.accent }}
                 whileHover={{ scale: 1.04, y: -2, boxShadow: `0 12px 32px ${T.accent}55` }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
-                Generate Your World <span style={{ opacity: 0.85 }}>→</span>
+                Launch Your Startup <span style={{ opacity: 0.85 }}>→</span>
               </motion.button>
               <motion.button
+                onClick={() => router.push("/projects")}
                 className="px-6 py-3 rounded-full text-sm font-medium flex items-center gap-2"
                 style={{ color: T.muted, border: `1px solid ${T.border}` }}
                 whileHover={{ borderColor: T.borderHi, color: T.text, y: -1 }}
@@ -1525,6 +1905,7 @@ function WorldVariants() {
   const { theme } = useTheme();
   const T = useTokens();
   const isDark = theme === "dark";
+  const { openGenerate } = useGenerate();
   const [activeKey, setActiveKey] = useState<VariantKey>("synthera");
 
   return (
@@ -1563,13 +1944,14 @@ function WorldVariants() {
               </span>
             </div>
             <motion.button
+              onClick={openGenerate}
               className="px-4 py-2 rounded-full text-xs font-semibold"
               style={{ border: `1px solid ${T.borderHi}`, color: T.muted, background: "transparent" }}
               whileHover={{ borderColor: T.accent, color: T.text }}
               whileTap={{ scale: 0.97 }}
               transition={{ duration: 0.18 }}
             >
-              Customize World →
+              Build My Startup →
             </motion.button>
           </div>
         </motion.div>
@@ -1603,6 +1985,10 @@ function WorldShowcase() {
   const stripRef     = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [left, setLeft] = useState(-1400);
+  const x = useMotionValue(0);
+  const isDragging = useRef(false);
+  const isHovered  = useRef(false);
+  const rafRef     = useRef<number | null>(null);
 
   React.useEffect(() => {
     const calc = () => {
@@ -1616,6 +2002,20 @@ function WorldShowcase() {
     return () => window.removeEventListener("resize", calc);
   }, []);
 
+  // Slow cinematic auto-drift — 0.35 px/frame ≈ very gentle
+  React.useEffect(() => {
+    const drift = () => {
+      if (!isDragging.current && !isHovered.current) {
+        const cur = x.get();
+        const nxt = cur - 0.35;
+        x.set(nxt < left ? 0 : nxt);
+      }
+      rafRef.current = requestAnimationFrame(drift);
+    };
+    rafRef.current = requestAnimationFrame(drift);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [left, x]);
+
   return (
     <section style={{ background: T.bg, paddingTop: 80, paddingBottom: 100 }}>
       {/* Header */}
@@ -1628,10 +2028,10 @@ function WorldShowcase() {
       >
         <div className="h-px w-6" style={{ background: T.accentSoft }} />
         <span className="text-[10px] font-bold uppercase tracking-[0.28em]" style={{ color: T.accentSoft }}>
-          Generated Worlds
+          Real startups, built by Orchestra
         </span>
         <div className="h-px flex-1" style={{ background: T.border }} />
-        <span style={{ color: T.muted, fontSize: 11 }}>Drag to explore →</span>
+        <span style={{ color: T.muted, fontSize: 11 }}>Drag to explore · click to build</span>
       </motion.div>
 
       {/* Draggable strip */}
@@ -1639,6 +2039,8 @@ function WorldShowcase() {
         ref={containerRef}
         className="overflow-hidden select-none"
         style={{ paddingLeft: "clamp(24px, 2.5vw, 64px)" }}
+        onMouseEnter={() => { isHovered.current = true; }}
+        onMouseLeave={() => { isHovered.current = false; }}
       >
         <motion.div
           ref={stripRef}
@@ -1647,8 +2049,10 @@ function WorldShowcase() {
           dragConstraints={{ right: 0, left }}
           dragElastic={0.04}
           dragMomentum
-          style={{ width: "max-content", cursor: "grab" }}
+          style={{ width: "max-content", cursor: "grab", x }}
           whileDrag={{ cursor: "grabbing" }}
+          onDragStart={() => { isDragging.current = true; }}
+          onDragEnd={() => { isDragging.current = false; }}
         >
           {WORLDS.map((world, i) => (
             <ShowcaseCard key={world.id} world={world} index={i} />
@@ -1662,6 +2066,7 @@ function WorldShowcase() {
 
 function ShowcaseCard({ world, index }: { world: WorldCard; index: number }) {
   const T = useTokens();
+  const { openGenerate } = useGenerate();
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const rotateX = useTransform(mouseY, [-150, 150], [6, -6]);
@@ -1670,6 +2075,7 @@ function ShowcaseCard({ world, index }: { world: WorldCard; index: number }) {
   return (
     <motion.div
       className="relative overflow-hidden rounded-2xl shrink-0 cursor-pointer"
+      onClick={openGenerate}
       style={{
         width: "clamp(260px, 22vw, 340px)",
         height: "clamp(360px, 55vh, 520px)",
@@ -1737,13 +2143,38 @@ function ShowcaseCard({ world, index }: { world: WorldCard; index: number }) {
         <p style={{ color: world.fg, fontSize: 11, opacity: 0.55, marginTop: 4 }}>
           {world.tagline}
         </p>
-        <motion.div
-          className="mt-3 w-2 h-2 rounded-full"
-          style={{ background: world.accent }}
-          animate={{ scale: [1, 1.5, 1], opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: index * 0.3 }}
-        />
+        <div className="mt-3 flex items-center justify-between">
+          <motion.div
+            className="w-2 h-2 rounded-full"
+            style={{ background: world.accent }}
+            animate={{ scale: [1, 1.5, 1], opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: index * 0.3 }}
+          />
+          <span style={{
+            fontSize: 9, fontWeight: 700, letterSpacing: "0.14em",
+            textTransform: "uppercase", color: world.fg, opacity: 0.4,
+          }}>
+            Build yours →
+          </span>
+        </div>
       </div>
+
+      {/* Hover CTA overlay */}
+      <motion.div
+        className="absolute inset-0 flex items-center justify-center"
+        initial={{ opacity: 0 }}
+        whileHover={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
+        style={{ background: `${world.accent}18`, backdropFilter: "blur(2px)" }}
+      >
+        <div style={{
+          background: `${world.accent}ee`, color: "#fff",
+          borderRadius: 30, padding: "10px 22px",
+          fontSize: 12, fontWeight: 700, letterSpacing: "0.04em",
+        }}>
+          Launch my startup →
+        </div>
+      </motion.div>
     </motion.div>
   );
 }
@@ -2044,20 +2475,41 @@ function OrchestraEcosystem() {
 
 function Manifesto() {
   const T = useTokens();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
+  const bgOpacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0.94, 1, 1, 0.97]);
+
   return (
-    <section
-      className="relative overflow-hidden flex items-center"
-      style={{ background: T.bg }}
+    <motion.section
+      ref={sectionRef as React.RefObject<HTMLElement>}
+      className="relative overflow-hidden flex items-center justify-center"
+      style={{ background: T.bg, minHeight: "100svh" }}
     >
-      <div className="absolute inset-0 overflow-hidden">
-        <Orb color={`${T.accent}38`} size={500} x="90%" y="20%" dur={16} />
-        <Orb color={`${T.gold}20`}   size={380} x="5%"  y="75%" dur={20} delay={3} />
-      </div>
+      {/* Scroll-reactive atmospheric glow */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{ opacity: bgOpacity }}
+      >
+        <div style={{
+          position: "absolute", inset: 0,
+          background: isDark
+            ? "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(80,40,200,0.18) 0%, transparent 70%)"
+            : "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(178,162,245,0.15) 0%, transparent 70%)",
+        }} />
+        <Orb color={`${T.accent}30`} size={600} x="85%" y="15%" dur={16} />
+        <Orb color={`${T.gold}18`}   size={420} x="8%"  y="80%" dur={20} delay={3} />
+      </motion.div>
       <Noise />
 
-      <div className="relative z-10 px-6 md:px-10 lg:px-24 py-16 max-w-[1200px] mx-auto w-full">
+      <motion.div
+        className="relative z-10 px-6 md:px-10 lg:px-24 py-24 max-w-[1200px] mx-auto w-full"
+        style={{ scale }}
+      >
         <motion.div
-          className="flex items-center gap-3 mb-12"
+          className="flex items-center gap-3 mb-14"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -2070,30 +2522,40 @@ function Manifesto() {
         </motion.div>
 
         <motion.blockquote
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 1.2, ease: E.expo as any, delay: 0.1 }}
+          initial="hidden"
+          whileInView="visible"
         >
-          <p
-            style={{
-              fontFamily: '"Georgia", "Times New Roman", serif',
-              fontStyle: "italic",
-              fontWeight: 400,
-              fontSize: "clamp(2rem, 4.5vw, 5rem)",
-              letterSpacing: "-0.02em",
-              lineHeight: 1.15,
-              color: T.text,
-            }}
-          >
-            "Not a template engine.
-            <br />
-            <span style={{ color: T.accentSoft }}>A world director.</span>
-            <br />
-            Each startup inhabits
-            <br />
-            its own visual universe."
-          </p>
+          {[
+            { text: "Not another", accent: false },
+            { text: "website builder.", accent: false },
+            { text: "Your startup's", accent: false },
+            { text: "creative director.", accent: true },
+          ].map((line, li) => (
+            <div key={li} className="overflow-hidden">
+              <motion.p
+                custom={li}
+                variants={{
+                  hidden: { y: "110%", opacity: 0 },
+                  visible: (i: number) => ({
+                    y: 0, opacity: 1,
+                    transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.1 + i * 0.14 },
+                  }),
+                }}
+                style={{
+                  fontFamily: '"Helvetica Neue", "Arial Black", sans-serif',
+                  fontWeight: 900,
+                  fontSize: "clamp(2.4rem, 5.5vw, 6.5rem)",
+                  letterSpacing: "-0.045em",
+                  lineHeight: 1.0,
+                  color: line.accent ? T.accentSoft : T.text,
+                  display: "block",
+                }}
+              >
+                {line.text}
+              </motion.p>
+            </div>
+          ))}
         </motion.blockquote>
 
         <motion.div
@@ -2105,11 +2567,11 @@ function Manifesto() {
         >
           <div className="w-12 h-px" style={{ background: T.gold }} />
           <span style={{ color: T.muted, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-            Orchestra — Cinematic Generation Engine
+            Orchestra — Founder Operating System
           </span>
         </motion.div>
-      </div>
-    </section>
+      </motion.div>
+    </motion.section>
   );
 }
 
@@ -2480,15 +2942,15 @@ function SimplicitySection() {
             </h2>
 
             <p className="mb-8 leading-relaxed" style={{ color: T.muted, fontSize: 15 }}>
-              Orchestra collapses every layer of technical complexity into a single,
-              cinematic creative flow. No code. No configuration. Just your vision,
-              orchestrated into a live startup world.
+              Orchestra collapses the entire startup launch stack into one
+              cinematic creative flow. Describe your idea and walk away with
+              a launch-ready business identity — no code, no team, no months of work.
             </p>
 
             {[
-              "Any founder. Any idea.",
-              "From concept to launched world.",
-              "Zero technical expertise required.",
+              "Idea → launch-ready in seconds.",
+              "Premium identity for any market.",
+              "The whole launch stack, orchestrated.",
             ].map((feat, i) => (
               <motion.div
                 key={feat}
@@ -2513,6 +2975,7 @@ function SimplicitySection() {
 
 function PricingSection() {
   const T = useTokens();
+  const { openGenerate } = useGenerate();
   const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
 
   const PLANS = [
@@ -2679,6 +3142,7 @@ function PricingSection() {
                 </ul>
 
                 <motion.button
+                  onClick={openGenerate}
                   className="w-full py-3.5 rounded-full text-sm font-bold"
                   style={
                     isFeatured
@@ -2719,6 +3183,8 @@ function PricingSection() {
 
 function EpilogueSection() {
   const T = useTokens();
+  const { openGenerate } = useGenerate();
+  const router = useRouter();
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const spotlightBg = useMotionTemplate`radial-gradient(600px at ${mouseX}px ${mouseY}px, ${T.accent}32 0%, transparent 65%)`;
@@ -2793,8 +3259,8 @@ function EpilogueSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: E.expo as any, delay: 0.25 }}
         >
-          Orchestra generates your entire visual startup world in seconds.
-          Cinematically composed. Atmospherically alive. Ready to launch.
+          Everything founders usually stitch together over months —
+          name, brand, launch page, business identity — orchestrated in seconds.
         </motion.p>
 
         <motion.div
@@ -2805,15 +3271,17 @@ function EpilogueSection() {
           transition={{ duration: 0.9, ease: E.expo as any, delay: 0.38 }}
         >
           <motion.button
+            onClick={openGenerate}
             className="px-10 py-4 rounded-full text-sm font-bold text-white"
             style={{ background: T.accent, boxShadow: `0 0 40px ${T.accent}35` }}
             whileHover={{ scale: 1.05, y: -3, boxShadow: `0 16px 48px ${T.accent}55` }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
           >
-            Generate Your World →
+            Launch Your Startup →
           </motion.button>
           <motion.button
+            onClick={() => router.push("/projects")}
             className="px-10 py-4 rounded-full text-sm font-medium"
             style={{ color: T.muted, border: `1px solid ${T.border}` }}
             whileHover={{ borderColor: T.borderHi, color: T.text, y: -1 }}
@@ -2868,29 +3336,59 @@ function V2Footer() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function V2Page() {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
+  const [generateOpen, setGenerateOpen] = useState(false);
   const T = theme === "dark" ? DARK : LIGHT;
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 180, damping: 30 });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("generate") === "1") {
+        setGenerateOpen(true);
+        window.history.replaceState({}, "", "/app");
+      }
+    }
+  }, []);
 
   return (
     <ThemeCtx.Provider value={{ theme, toggle: () => setTheme((t) => (t === "dark" ? "light" : "dark")) }}>
-      <motion.main
-        style={{ overflowX: "hidden" }}
-        animate={{ background: T.bg }}
-        transition={{ duration: 0.5, ease: E.smooth as any }}
-      >
-        <V2Nav />
-        <CinematicHero />
-        <WorldVariants />
-        <WorldShowcase />
-        <OrchestraEcosystem />
-        <Manifesto />
-        <SystemsSection />
-        <AtmosphericShowcase />
-        <SimplicitySection />
-        <PricingSection />
-        <EpilogueSection />
-        <V2Footer />
-      </motion.main>
+      <GenerateCtx.Provider value={{ openGenerate: () => setGenerateOpen(true) }}>
+        {/* Scroll progress bar */}
+        <motion.div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 1.5,
+            zIndex: 9999,
+            background: `linear-gradient(to right, ${T.accent}, ${T.accentSoft})`,
+            scaleX,
+            transformOrigin: "0%",
+          }}
+        />
+        <V2GenerateModal open={generateOpen} onClose={() => setGenerateOpen(false)} />
+        <motion.main
+          style={{ overflowX: "hidden" }}
+          animate={{ background: T.bg }}
+          transition={{ duration: 0.5, ease: E.smooth as any }}
+        >
+          <V2Nav />
+          <CinematicHero />
+          <WorldVariants />
+          <WorldShowcase />
+          <OrchestraEcosystem />
+          <Manifesto />
+          <SystemsSection />
+          <AtmosphericShowcase />
+          <SimplicitySection />
+          <PricingSection />
+          <EpilogueSection />
+          <V2Footer />
+        </motion.main>
+      </GenerateCtx.Provider>
     </ThemeCtx.Provider>
   );
 }
