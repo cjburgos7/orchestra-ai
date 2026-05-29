@@ -10,6 +10,7 @@ import { isGeneratedSections } from "@/lib/orchestration/validators";
 import { fallbackSections } from "@/lib/orchestration/pipelines/section-fallback";
 import { buildProductVisuals, buildSectionGenerationContext } from "@/lib/orchestration/product-visuals";
 import { WORLD_V2_ENABLED, buildWorldV2 } from "@/lib/world-v2";
+import { injectFluxHero } from "@/lib/world-v2/flux-generation";
 import { resolutionCopyContext } from "@/lib/orchestration/category-resolution";
 import { imageryCopyGuard } from "@/lib/orchestration/category-imagery";
 import { resolveCategory } from "@/lib/orchestration/category-resolution";
@@ -85,7 +86,7 @@ export async function runGenerateSectionsPipeline(input: Input): Promise<Generat
       if (WORLD_V2_ENABLED) {
         return {
           ...merged,
-          worldV2: buildWorldV2(input.brief, seed),
+          worldV2: await injectFluxHero(buildWorldV2(input.brief, seed), input.brief),
         };
       }
       return {
@@ -101,7 +102,7 @@ export async function runGenerateSectionsPipeline(input: Input): Promise<Generat
   const seed = input.seed ?? `${input.brief.name}:${input.direction}`;
   const fallback = fallbackSections(input.brief, directionLabel);
   if (WORLD_V2_ENABLED) {
-    return { ...fallback, worldV2: buildWorldV2(input.brief, seed) };
+    return { ...fallback, worldV2: await injectFluxHero(buildWorldV2(input.brief, seed), input.brief) };
   }
   return {
     ...fallback,
