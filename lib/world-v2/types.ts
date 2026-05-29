@@ -20,6 +20,9 @@ export type V2CategoryKey =
 export type V2SectionType =
   | "hero-cinematic"
   | "hero-split-kinetic"
+  | "hero-editorial-luxury"   // Motion Sites DNA: text-dominant, image below fold, Instrument Serif
+  | "hero-athletic"           // Sports/Fitness: stats-first hierarchy, raw full-bleed image, hard edge
+  | "hero-product-saas"       // SaaS/Science: product frame right, feature tags below
   | "editorial-mosaic"
   | "feature-asymmetric"
   | "proof-gallery"

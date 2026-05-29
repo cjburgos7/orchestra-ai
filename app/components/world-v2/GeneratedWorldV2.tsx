@@ -323,9 +323,594 @@ function HeroSplitKinetic({ world, sections, parallax }: { world: WorldV2Package
   );
 }
 
-/** Stats band — editorial number display, NOT a uniform 3-column grid */
+/**
+ * HERO: Editorial Luxury — Motion Sites DNA
+ * Text dominates. Image lives below the fold as a teaser.
+ * Instrument Serif at massive scale. Color-split headline. Staggered fade-rise.
+ * Used by: floral, fashion, wellness.
+ */
+function HeroEditorialLuxury({ world, sections, parallax }: { world: WorldV2Package; sections: GeneratedSections; parallax: number }) {
+  const img = world.sections.find((s) => s.type === "hero-editorial-luxury")?.images[0] ?? world.heroImage;
+  const words = sections.hero.headline.split(" ");
+  const pivotIdx = Math.max(1, Math.ceil(words.length * 0.55));
+
+  return (
+    <section
+      style={{
+        background: world.background,
+        color: world.foreground,
+        minHeight: "100svh",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Centered editorial text block — takes priority in the viewport */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          flex: "0 0 auto",
+          padding: "calc(8rem - 75px) 2rem 4rem",
+          textAlign: "center",
+          position: "relative",
+          zIndex: 10,
+        }}
+      >
+        {/* Category eyebrow — horizontal rule + label */}
+        <motion.div
+          style={{ display: "flex", alignItems: "center", gap: "1.25rem", marginBottom: "3rem" }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.15 }}
+        >
+          <div style={{ width: 40, height: 1, background: `${world.accentColor}60` }} />
+          <span style={{
+            fontSize: "10px", fontWeight: 700, textTransform: "uppercase",
+            letterSpacing: "0.3em", color: world.accentColor,
+          }}>
+            {world.categoryLabel}
+          </span>
+          <div style={{ width: 40, height: 1, background: `${world.accentColor}60` }} />
+        </motion.div>
+
+        {/* Massive headline — Instrument Serif, color-split */}
+        <motion.h1
+          style={{
+            fontFamily: world.typography.displayFamily,
+            fontWeight: world.typography.displayWeight,
+            fontSize: world.typography.headlineScale,
+            letterSpacing: "-0.025em",
+            lineHeight: 0.95,
+            maxWidth: "900px",
+            marginBottom: "2.5rem",
+            color: world.foreground,
+          }}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.0, ease: EASE_OUT_EXPO, delay: 0.25 }}
+        >
+          {/* First half — full foreground */}
+          <span>{words.slice(0, pivotIdx).join(" ")}</span>
+          {/* Second half — accent tint for editorial art direction */}
+          {words.length > pivotIdx && (
+            <span style={{ color: world.accentColor }}>{" "}{words.slice(pivotIdx).join(" ")}</span>
+          )}
+        </motion.h1>
+
+        {/* Thin decorative rule */}
+        <motion.div
+          style={{ height: 1, background: `${world.foreground}25`, marginBottom: "2rem" }}
+          initial={{ width: 0 }}
+          animate={{ width: 64 }}
+          transition={{ duration: 0.9, ease: "easeOut", delay: 0.68 }}
+        />
+
+        {/* Subheadline */}
+        <motion.p
+          style={{
+            fontSize: "1rem", lineHeight: 1.75, maxWidth: "40ch",
+            opacity: 0.55, marginBottom: "2.75rem", color: world.foreground,
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.4 }}
+        >
+          {sections.hero.subheadline}
+        </motion.p>
+
+        {/* CTAs — editorial: outlined primary, text secondary */}
+        <motion.div
+          style={{ display: "flex", gap: "1rem", alignItems: "center" }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: EASE_OUT_EXPO, delay: 0.52 }}
+        >
+          <motion.span
+            style={{
+              fontSize: "0.875rem", fontWeight: 500, padding: "0.9rem 2.75rem",
+              borderRadius: "9999px", border: `1.5px solid ${world.foreground}`,
+              cursor: "pointer", color: world.foreground, display: "inline-block",
+            }}
+            whileHover={{ background: world.foreground, color: world.background }}
+            transition={{ duration: 0.2 }}
+          >
+            {sections.hero.ctaPrimary}
+          </motion.span>
+          <span style={{ fontSize: "0.875rem", opacity: 0.4, color: world.foreground }}>
+            {sections.hero.ctaSecondary}
+          </span>
+        </motion.div>
+      </div>
+
+      {/* Image — below the text, visible as a teaser. This is NOT background. */}
+      <motion.div
+        style={{
+          position: "relative",
+          height: "52vh",
+          overflow: "hidden",
+          flex: "0 0 auto",
+        }}
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1.3, ease: EASE_OUT_EXPO, delay: 0.6 }}
+      >
+        {/* Top edge fade into background */}
+        <div
+          style={{
+            position: "absolute", inset: 0, zIndex: 10, pointerEvents: "none",
+            background: `linear-gradient(to bottom, ${world.background} 0%, transparent 28%)`,
+          }}
+          aria-hidden
+        />
+        <div style={{ transform: parallaxTransform(0.3, parallax, 60) }} className="absolute inset-0">
+          <V2Image image={img} overlay="light" meshFrom={world.meshFrom} meshTo={world.meshTo} className="absolute inset-0" />
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+/**
+ * HERO: Athletic — Sports/Fitness specific
+ * Stats-first hierarchy. Raw full-bleed image on the right with NO gradient blend.
+ * Left panel: performance metrics at top, then headline, then CTA.
+ * Hard architectural edge between panels — not a soft split.
+ * Used by: sports, fitness.
+ */
+function HeroAthletic({ world, sections, parallax, brief }: { world: WorldV2Package; sections: GeneratedSections; parallax: number; brief: StartupBrief }) {
+  const sec = world.sections.find((s) => s.type === "hero-athletic");
+  const imgs = sec?.images.length ? sec.images : [world.heroImage];
+  const price = brief.pricing.tiers[0]?.price ?? "$29";
+  const featureCount = brief.features?.length ?? 4;
+
+  return (
+    <section
+      style={{
+        background: world.background,
+        color: world.foreground,
+        minHeight: "100svh",
+        display: "grid",
+        gridTemplateColumns: "45% 55%",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* LEFT PANEL — stats-first */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          padding: "7rem 3rem 5rem 3.5rem",
+          position: "relative",
+          zIndex: 2,
+        }}
+      >
+        {/* Performance stats row — at the TOP, before the headline */}
+        <motion.div
+          style={{ display: "flex", gap: "2rem", marginBottom: "2.5rem" }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: EASE_OUT_EXPO, delay: 0.1 }}
+        >
+          {[
+            { val: `${featureCount * 3}k+`, label: "Athletes" },
+            { val: price, label: "Starting" },
+            { val: `${85 + featureCount}%`, label: "Win rate" },
+          ].map((stat, i) => (
+            <div key={i}>
+              <div
+                style={{
+                  fontSize: "clamp(1.4rem, 3vw, 2.2rem)",
+                  fontWeight: 900,
+                  letterSpacing: "-0.04em",
+                  color: i === 0 ? world.accentColor : world.foreground,
+                  lineHeight: 1,
+                }}
+              >
+                {stat.val}
+              </div>
+              <div style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.18em", opacity: 0.45, marginTop: "0.25rem" }}>
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </motion.div>
+
+        {/* Accent divider */}
+        <motion.div
+          style={{ width: "100%", height: 1, background: `${world.foreground}18`, marginBottom: "1.75rem" }}
+          initial={{ scaleX: 0, originX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.7, ease: "easeOut", delay: 0.3 }}
+        />
+
+        {/* Headline — bold, large, tight tracking */}
+        <motion.h1
+          style={{
+            fontFamily: world.typography.displayFamily,
+            fontWeight: world.typography.displayWeight,
+            letterSpacing: world.typography.displayTracking,
+            fontSize: world.typography.headlineScale,
+            lineHeight: 1.0,
+            color: world.foreground,
+            marginBottom: "1.5rem",
+          }}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: EASE_OUT_EXPO, delay: 0.2 }}
+        >
+          {sections.hero.headline}
+        </motion.h1>
+
+        <motion.p
+          style={{ fontSize: "0.9rem", opacity: 0.5, maxWidth: "34ch", lineHeight: 1.65, marginBottom: "2.5rem" }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: EASE_OUT_EXPO, delay: 0.38 }}
+        >
+          {sections.hero.subheadline}
+        </motion.p>
+
+        <motion.div
+          style={{ display: "flex", gap: "0.75rem" }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: EASE_OUT_EXPO, delay: 0.5 }}
+        >
+          <motion.span
+            style={{
+              fontSize: "0.875rem", fontWeight: 700, padding: "0.85rem 2rem",
+              borderRadius: "6px", background: world.accentColor, color: "#fff",
+              cursor: "pointer", display: "inline-block", letterSpacing: "0.02em",
+            }}
+            whileHover={{ scale: 1.04, y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+          >
+            {sections.hero.ctaPrimary}
+          </motion.span>
+          <span
+            style={{
+              fontSize: "0.875rem", fontWeight: 500, padding: "0.85rem 1.5rem",
+              borderRadius: "6px", border: `1px solid ${world.foreground}25`,
+              color: world.foreground, display: "inline-block",
+            }}
+          >
+            {sections.hero.ctaSecondary}
+          </span>
+        </motion.div>
+      </div>
+
+      {/* RIGHT PANEL — full-bleed image, NO gradient blend into text */}
+      <div style={{ position: "relative", overflow: "hidden" }}>
+        <div style={{ transform: parallaxTransform(0.25, parallax) }} className="absolute inset-0">
+          <motion.div
+            className="absolute inset-0"
+            initial={{ scale: 1.06 }}
+            animate={{ scale: 1.0 }}
+            transition={{ duration: 2.0, ease: "easeOut" }}
+          >
+            <V2Image
+              image={imgs[0]}
+              priority
+              overlay="none"
+              meshFrom={world.meshFrom}
+              meshTo={world.meshTo}
+              className="absolute inset-0"
+            />
+          </motion.div>
+        </div>
+        {/* Accent bar on left edge of image — architectural seam marker */}
+        <div
+          style={{
+            position: "absolute", left: 0, top: 0, bottom: 0, width: 3,
+            background: world.accentColor, zIndex: 5,
+          }}
+          aria-hidden
+        />
+      </div>
+
+      {/* Category label — vertical, bottom right */}
+      <motion.div
+        style={{
+          position: "absolute", bottom: "2.5rem", right: "2rem", zIndex: 10,
+          writingMode: "vertical-rl", textOrientation: "mixed",
+          fontSize: "9px", fontWeight: 700, textTransform: "uppercase",
+          letterSpacing: "0.2em", opacity: 0.35, color: "#fff",
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.35 }}
+        transition={{ delay: 1.2, duration: 0.7 }}
+      >
+        {world.categoryLabel} · {sections.hero.eyebrow}
+      </motion.div>
+    </section>
+  );
+}
+
+/**
+ * HERO: Product SaaS — Information-dense, product-frame right, feature tags below
+ * Two-column: headline/sub/CTA left, stylized product frame right.
+ * Feature capability tags below the main content.
+ * Used by: saas (launch variant), education.
+ */
+function HeroProductSaaS({ world, sections, brief }: { world: WorldV2Package; sections: GeneratedSections; brief: StartupBrief }) {
+  const img = world.sections.find((s) => s.type === "hero-product-saas")?.images[0] ?? world.heroImage;
+  const featureTags = (brief.features ?? []).slice(0, 4);
+
+  return (
+    <section
+      style={{
+        background: world.background,
+        color: world.foreground,
+        minHeight: "100svh",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: "6rem 3.5rem 4rem",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Subtle grid background */}
+      <div
+        style={{
+          position: "absolute", inset: 0, pointerEvents: "none",
+          backgroundImage: `linear-gradient(${world.foreground}06 1px, transparent 1px), linear-gradient(90deg, ${world.foreground}06 1px, transparent 1px)`,
+          backgroundSize: "60px 60px",
+          zIndex: 0,
+        }}
+        aria-hidden
+      />
+
+      {/* Main grid */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "52% 48%",
+          gap: "3rem",
+          alignItems: "center",
+          position: "relative",
+          zIndex: 1,
+          maxWidth: "1200px",
+          margin: "0 auto",
+          width: "100%",
+        }}
+      >
+        {/* Left: text */}
+        <div>
+          <motion.div
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "0.5rem",
+              background: `${world.accentColor}15`, border: `1px solid ${world.accentColor}35`,
+              borderRadius: "9999px", padding: "0.35rem 0.85rem",
+              marginBottom: "2rem",
+            }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE_OUT_EXPO, delay: 0.1 }}
+          >
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: world.accentColor }} />
+            <span style={{ fontSize: "11px", fontWeight: 600, color: world.accentColor, letterSpacing: "0.05em" }}>
+              {world.categoryLabel}
+            </span>
+          </motion.div>
+
+          <motion.h1
+            style={{
+              fontFamily: world.typography.displayFamily,
+              fontWeight: world.typography.displayWeight,
+              letterSpacing: world.typography.displayTracking,
+              fontSize: "clamp(2.5rem, 5vw, 4.2rem)",
+              lineHeight: 1.05,
+              color: world.foreground,
+              marginBottom: "1.5rem",
+            }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: EASE_OUT_EXPO, delay: 0.2 }}
+          >
+            {sections.hero.headline}
+          </motion.h1>
+
+          <motion.p
+            style={{
+              fontSize: "1rem", lineHeight: 1.7, opacity: 0.58,
+              maxWidth: "42ch", marginBottom: "2.5rem",
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: EASE_OUT_EXPO, delay: 0.32 }}
+          >
+            {sections.hero.subheadline}
+          </motion.p>
+
+          <motion.div
+            style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: EASE_OUT_EXPO, delay: 0.44 }}
+          >
+            <motion.span
+              style={{
+                fontSize: "0.875rem", fontWeight: 700, padding: "0.8rem 2rem",
+                borderRadius: "8px", background: world.accentColor, color: "#fff",
+                cursor: "pointer",
+              }}
+              whileHover={{ scale: 1.03, y: -2 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              {sections.hero.ctaPrimary}
+            </motion.span>
+            <span
+              style={{
+                fontSize: "0.875rem", fontWeight: 500, padding: "0.8rem 1.75rem",
+                borderRadius: "8px", border: `1px solid ${world.foreground}20`,
+                color: world.foreground,
+              }}
+            >
+              {sections.hero.ctaSecondary}
+            </span>
+          </motion.div>
+
+          {/* Feature capability tags */}
+          {featureTags.length > 0 && (
+            <motion.div
+              style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "2.5rem" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.65 }}
+            >
+              {featureTags.map((f, i) => (
+                <span
+                  key={i}
+                  style={{
+                    fontSize: "11px", fontWeight: 500,
+                    padding: "0.3rem 0.75rem", borderRadius: "9999px",
+                    background: `${world.foreground}08`,
+                    border: `1px solid ${world.foreground}14`,
+                    color: world.foreground, opacity: 0.7,
+                  }}
+                >
+                  {typeof f === "string" ? f.split(":")[0]?.split(" ").slice(0, 3).join(" ") : `Feature ${i + 1}`}
+                </span>
+              ))}
+            </motion.div>
+          )}
+        </div>
+
+        {/* Right: product frame — stylized, not a real screenshot */}
+        <motion.div
+          style={{ position: "relative" }}
+          initial={{ opacity: 0, x: 40, y: 20 }}
+          animate={{ opacity: 1, x: 0, y: 0 }}
+          transition={{ duration: 1.0, ease: EASE_OUT_EXPO, delay: 0.35 }}
+        >
+          {/* Browser chrome frame */}
+          <div
+            style={{
+              borderRadius: "14px",
+              overflow: "hidden",
+              border: `1px solid ${world.foreground}18`,
+              boxShadow: `0 24px 80px ${world.foreground}14, 0 8px 24px ${world.foreground}08`,
+            }}
+          >
+            {/* Browser titlebar */}
+            <div
+              style={{
+                padding: "0.65rem 1rem",
+                background: `${world.foreground}06`,
+                borderBottom: `1px solid ${world.foreground}10`,
+                display: "flex", alignItems: "center", gap: "0.4rem",
+              }}
+            >
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f57" }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#febc2e" }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#28c840" }} />
+              <div
+                style={{
+                  flex: 1, margin: "0 1rem", height: 22, borderRadius: "6px",
+                  background: `${world.foreground}08`, border: `1px solid ${world.foreground}10`,
+                }}
+              />
+            </div>
+            {/* Product content area — image or mesh gradient */}
+            <div style={{ aspectRatio: "16/10", position: "relative", overflow: "hidden" }}>
+              <V2Image image={img} overlay="none" meshFrom={world.meshFrom} meshTo={world.meshTo} className="absolute inset-0" />
+              {/* UI overlay elements */}
+              <div style={{ position: "absolute", bottom: "1rem", left: "1rem", right: "1rem", display: "flex", gap: "0.5rem" }}>
+                {[40, 60, 80].map((w, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      height: "4px", width: `${w}px`, borderRadius: "9999px",
+                      background: i === 0 ? world.accentColor : `${world.foreground}20`,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+          {/* Floating metric badge */}
+          <motion.div
+            style={{
+              position: "absolute", top: "-1rem", right: "-1rem",
+              background: world.accentColor, color: "#fff",
+              borderRadius: "10px", padding: "0.6rem 1rem",
+              fontSize: "12px", fontWeight: 700,
+              boxShadow: `0 8px 24px ${world.accentColor}50`,
+            }}
+            animate={{ y: [0, -6, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          >
+            {brief.pricing.tiers[0]?.price ?? "$29"}/mo
+          </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function nameHash(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function deriveStats(brief: StartupBrief, world: WorldV2Package) {
+  const h = nameHash(brief.name ?? "startup");
+  const price = brief.pricing.tiers[0]?.price ?? "$29";
+  type S = [string, string, string, string];
+  const map: Partial<Record<string, S>> = {
+    fitness:   [`${8  + (h % 24)}k+`,    "Members",           `${78 + (h % 20)}%`,          "Retention"],
+    floral:    [`${10 + (h % 50)}k+`,    "Orders delivered",  `${h % 2 ? "4.9" : "4.8"}★`,  "Avg rating"],
+    finance:   [`$${1 + (h % 14)}M+`,    "Assets managed",    `+${20 + (h % 28)}%`,          "Avg return"],
+    fashion:   [`${15 + (h % 65)}k+`,    "Items sold",        `${150 + (h % 300)}+`,         "Brands"],
+    food:      [`${50 + (h % 180)}k+`,   "Orders",            `${200 + (h % 600)}+`,         "Restaurants"],
+    saas:      [`${2  + (h % 18)}k+`,    "Teams active",      `99.${h % 2 ? "9" : "8"}%`,   "Uptime"],
+    wellness:  [`${5  + (h % 22)}k+`,    "Sessions",          `${82 + (h % 16)}%`,           "Client retention"],
+    sports:    [`${2  + (h % 15)}k+`,    "Athletes",          `${200 + (h % 400)}+`,         "Teams"],
+    travel:    [`${5  + (h % 45)}k+`,    "Trips booked",      `${60 + (h % 120)}+`,          "Destinations"],
+    home:      [`${3  + (h % 14)}k+`,    "Projects",          `${h % 2 ? "4.9" : "4.8"}★`,  "Avg rating"],
+    education: [`${8  + (h % 42)}k+`,    "Students",          `${78 + (h % 20)}%`,           "Completion rate"],
+    health:    [`${5  + (h % 15)}k+`,    "Patients",          `${85 + (h % 12)}%`,           "Positive outcomes"],
+    creator:   [`${2  + (h % 18)}k+`,    "Creators",          `${100 + (h % 400)}k+`,        "Downloads"],
+    music:     [`${200 + (h % 800)}k+`,  "Streams",           `${50 + (h % 200)}+`,          "Artists"],
+    science:   [`${500 + (h % 4500)}+`,  "Experiments run",   `${15 + (h % 65)}+`,           "Research labs"],
+  };
+  const [primaryVal, primaryLabel, secondaryVal, secondaryLabel] =
+    map[world.category] ?? [`${5 + (h % 20)}k+`, "Users", `${h % 2 ? "4.9" : "4.8"}★`, "Rating"];
+  return { primaryVal, primaryLabel, secondaryVal, secondaryLabel, tertiaryVal: price };
+}
+
+/** Stats band — editorial number display, category-derived so each startup differs */
 function StatsBand({ world, brief }: { world: WorldV2Package; brief: StartupBrief }) {
-  const primary = brief.pricing.tiers[0]?.price ?? "$29";
+  const { primaryVal, primaryLabel, secondaryVal, secondaryLabel, tertiaryVal } = deriveStats(brief, world);
   const statVariants = {
     hidden: { opacity: 0, y: 24 },
     visible: (i: number) => ({
@@ -344,34 +929,32 @@ function StatsBand({ world, brief }: { world: WorldV2Package; brief: StartupBrie
       viewport={{ once: true, margin: "-80px" }}
     >
       <div className="px-6 md:px-14 py-8 md:py-10 flex flex-col md:flex-row items-start md:items-center gap-0 md:gap-0 divide-y md:divide-y-0 md:divide-x divide-white/20">
-        {/* Primary stat — very large */}
         <motion.div className="flex flex-col pr-0 md:pr-16 pb-6 md:pb-0" custom={0} variants={statVariants}>
           <span
             className="font-black leading-none"
             style={{ fontSize: "clamp(3.5rem, 8vw, 6rem)", letterSpacing: "-0.03em" }}
           >
-            12k+
+            {primaryVal}
           </span>
-          <span className="text-[10px] uppercase tracking-[0.2em] opacity-70 mt-1">Active users</span>
+          <span className="text-[10px] uppercase tracking-[0.2em] opacity-70 mt-1">{primaryLabel}</span>
         </motion.div>
 
-        {/* Secondary stats — medium */}
         <div className="flex gap-12 pl-0 md:pl-16 pt-6 md:pt-0">
           <motion.div custom={1} variants={statVariants}>
             <span
               className="font-black leading-none block"
               style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", letterSpacing: "-0.03em" }}
             >
-              4.9★
+              {secondaryVal}
             </span>
-            <span className="text-[10px] uppercase tracking-[0.2em] opacity-70 mt-1 block">Satisfaction</span>
+            <span className="text-[10px] uppercase tracking-[0.2em] opacity-70 mt-1 block">{secondaryLabel}</span>
           </motion.div>
           <motion.div custom={2} variants={statVariants}>
             <span
               className="font-black leading-none block"
               style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", letterSpacing: "-0.03em" }}
             >
-              {primary}
+              {tertiaryVal}
             </span>
             <span className="text-[10px] uppercase tracking-[0.2em] opacity-70 mt-1 block">Starting price</span>
           </motion.div>
@@ -901,6 +1484,12 @@ function renderSection(
       return <HeroCinematic key={section.id} world={world} sections={sections} parallax={parallax} />;
     case "hero-split-kinetic":
       return <HeroSplitKinetic key={section.id} world={world} sections={sections} parallax={parallax} />;
+    case "hero-editorial-luxury":
+      return <HeroEditorialLuxury key={section.id} world={world} sections={sections} parallax={parallax} />;
+    case "hero-athletic":
+      return <HeroAthletic key={section.id} world={world} sections={sections} parallax={parallax} brief={brief} />;
+    case "hero-product-saas":
+      return <HeroProductSaaS key={section.id} world={world} sections={sections} brief={brief} />;
     case "stats-band":
       return <StatsBand key={section.id} world={world} brief={brief} />;
     case "feature-asymmetric": {
@@ -1094,6 +1683,22 @@ export default function GeneratedWorldV2({ brief, sections, world, isPreview = f
           return (
             <div key={section.id}>
               <WorldNav world={world} sections={sections} floating={false} isPreview={isPreview} />
+              {rendered}
+            </div>
+          );
+        }
+        if (section.type === "hero-editorial-luxury" && rendered) {
+          return (
+            <div key={section.id} className="relative">
+              <WorldNav world={world} sections={sections} floating={false} isPreview={isPreview} />
+              {rendered}
+            </div>
+          );
+        }
+        if ((section.type === "hero-athletic" || section.type === "hero-product-saas") && rendered) {
+          return (
+            <div key={section.id} className="relative">
+              <WorldNav world={world} sections={sections} floating={true} isPreview={isPreview} />
               {rendered}
             </div>
           );

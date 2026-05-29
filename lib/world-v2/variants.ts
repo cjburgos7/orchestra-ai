@@ -11,8 +11,7 @@ const BASE: Record<V2CategoryKey, V2VariantProfile[]> = {
       meshFrom: "#fff7ed",
       meshTo: "#fed7aa",
       sectionBlueprint: [
-        { type: "hero-split-kinetic", heightVh: 100, motion: "parallax", density: "dense", imageRoles: ["hero", "detail"] },
-        { type: "stats-band", heightVh: 28, motion: "reveal", density: "balanced", imageRoles: [] },
+        { type: "hero-athletic", heightVh: 100, motion: "parallax", density: "dense", imageRoles: ["hero", "detail"] },
         { type: "feature-asymmetric", heightVh: 72, motion: "float", density: "balanced", imageRoles: ["feature"], featureIndex: 0 },
         { type: "editorial-mosaic", heightVh: 88, motion: "parallax", density: "dense", imageRoles: ["editorial", "ambient", "detail"] },
         { type: "feature-asymmetric", heightVh: 68, motion: "reveal", density: "balanced", imageRoles: ["feature"], featureIndex: 1 },
@@ -31,7 +30,7 @@ const BASE: Record<V2CategoryKey, V2VariantProfile[]> = {
       meshFrom: "#e8f3ef",
       meshTo: "#cce3de",
       sectionBlueprint: [
-        { type: "hero-cinematic", heightVh: 100, motion: "parallax", density: "sparse", imageRoles: ["hero"] },
+        { type: "hero-editorial-luxury", heightVh: 100, motion: "parallax", density: "sparse", imageRoles: ["hero"] },
         { type: "story-editorial", heightVh: 65, motion: "reveal", density: "sparse", imageRoles: ["editorial"] },
         { type: "editorial-mosaic", heightVh: 95, motion: "float", density: "dense", imageRoles: ["feature", "editorial", "detail"] },
         { type: "feature-asymmetric", heightVh: 70, motion: "reveal", density: "balanced", imageRoles: ["feature"], featureIndex: 0 },
@@ -85,7 +84,7 @@ const BASE: Record<V2CategoryKey, V2VariantProfile[]> = {
       meshFrom: "#fdf2f8",
       meshTo: "#fce7f3",
       sectionBlueprint: [
-        { type: "hero-cinematic", heightVh: 100, motion: "parallax", density: "sparse", imageRoles: ["hero"] },
+        { type: "hero-editorial-luxury", heightVh: 100, motion: "parallax", density: "sparse", imageRoles: ["hero"] },
         { type: "editorial-mosaic", heightVh: 90, motion: "float", density: "dense", imageRoles: ["editorial", "feature", "detail"] },
         { type: "feature-asymmetric", heightVh: 68, motion: "reveal", density: "balanced", imageRoles: ["feature"], featureIndex: 0 },
         { type: "testimonial-float", heightVh: 45, motion: "drift", density: "sparse", imageRoles: ["ambient"] },
@@ -121,7 +120,7 @@ const BASE: Record<V2CategoryKey, V2VariantProfile[]> = {
       meshFrom: "#f0f9ff",
       meshTo: "#e0e7ff",
       sectionBlueprint: [
-        { type: "hero-split-kinetic", heightVh: 95, motion: "reveal", density: "balanced", imageRoles: ["hero", "detail"] },
+        { type: "hero-product-saas", heightVh: 95, motion: "reveal", density: "balanced", imageRoles: ["hero", "detail"] },
         { type: "stats-band", heightVh: 28, motion: "reveal", density: "dense", imageRoles: [] },
         { type: "feature-asymmetric", heightVh: 70, motion: "float", density: "balanced", imageRoles: ["feature"], featureIndex: 0 },
         { type: "proof-gallery", heightVh: 72, motion: "parallax", density: "dense", imageRoles: ["editorial", "feature", "ambient"] },
@@ -173,7 +172,7 @@ const BASE: Record<V2CategoryKey, V2VariantProfile[]> = {
       meshFrom: "#ecfdf5",
       meshTo: "#d1fae5",
       sectionBlueprint: [
-        { type: "hero-cinematic", heightVh: 100, motion: "parallax", density: "sparse", imageRoles: ["hero"] },
+        { type: "hero-editorial-luxury", heightVh: 100, motion: "parallax", density: "sparse", imageRoles: ["hero"] },
         { type: "story-editorial", heightVh: 62, motion: "drift", density: "sparse", imageRoles: ["editorial"] },
         { type: "feature-asymmetric", heightVh: 65, motion: "reveal", density: "balanced", imageRoles: ["feature"], featureIndex: 0 },
         { type: "testimonial-float", heightVh: 48, motion: "float", density: "sparse", imageRoles: ["ambient"] },
@@ -186,15 +185,15 @@ const BASE: Record<V2CategoryKey, V2VariantProfile[]> = {
       key: "arena",
       label: "Arena intelligence",
       motion: "energetic",
-      background: "#0f172a",
-      foreground: "#f8fafc",
+      background: "#0a0a0f",
+      foreground: "#f0f4ff",
       meshFrom: "#eff6ff",
       meshTo: "#dbeafe",
       sectionBlueprint: [
-        { type: "hero-cinematic", heightVh: 100, motion: "parallax", density: "dense", imageRoles: ["hero"] },
-        { type: "stats-band", heightVh: 30, motion: "reveal", density: "dense", imageRoles: [] },
+        { type: "hero-athletic", heightVh: 100, motion: "parallax", density: "dense", imageRoles: ["hero", "detail"] },
         { type: "proof-gallery", heightVh: 78, motion: "parallax", density: "dense", imageRoles: ["editorial", "feature", "ambient"] },
-        { type: "feature-asymmetric", heightVh: 68, motion: "float", density: "balanced", imageRoles: ["feature"], featureIndex: 0 },
+        { type: "feature-asymmetric", heightVh: 70, motion: "float", density: "balanced", imageRoles: ["feature"], featureIndex: 0 },
+        { type: "feature-asymmetric", heightVh: 68, motion: "reveal", density: "balanced", imageRoles: ["editorial"], featureIndex: 1 },
         { type: "cta-immersive", heightVh: 55, motion: "drift", density: "balanced", imageRoles: ["hero"] },
       ],
     },
@@ -406,20 +405,20 @@ export function typographyFor(category: V2CategoryKey, variant: V2VariantProfile
   }
   if (category === "floral" || category === "fashion") {
     return {
-      displayFamily: "Georgia, 'Times New Roman', serif",
+      displayFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
       displayWeight: 400,
-      displayTracking: "-0.025em",
-      bodyFamily: "system-ui, sans-serif",
-      headlineScale: "clamp(3.5rem, 9vw, 7.5rem)",
+      displayTracking: "-0.03em",
+      bodyFamily: "'Inter', system-ui, sans-serif",
+      headlineScale: "clamp(4rem, 10vw, 8.5rem)",
     };
   }
   if (category === "wellness" || category === "home" || category === "travel" || category === "food" || category === "health") {
     return {
-      displayFamily: "Georgia, 'Times New Roman', serif",
+      displayFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
       displayWeight: 400,
-      displayTracking: "-0.02em",
+      displayTracking: "-0.025em",
       bodyFamily: "system-ui, sans-serif",
-      headlineScale: "clamp(3rem, 8vw, 6.5rem)",
+      headlineScale: "clamp(3.2rem, 8vw, 7rem)",
     };
   }
   if (kinetic || category === "fitness" || category === "sports") {
