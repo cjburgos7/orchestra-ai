@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { saveProject } from "@/lib/persistence/projects";
 
-const SERIF = "'CameraPlainVariable', Georgia, serif";
+const SERIF = "var(--font-canela), 'Didot', 'Georgia', serif";
 
 const PHASE1_MSGS = [
   "Reading your idea…",
@@ -45,6 +45,12 @@ export default function GenerateModal({
   const [placeholder] = useState(
     () => PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]
   );
+  const [selectedFoundation, setSelectedFoundation] = useState<"foundation-1" | "foundation-2" | "foundation-3">("foundation-1");
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [ideaImages, setIdeaImages] = useState<string[]>([]);
+  const [selectedIdeaIdx, setSelectedIdeaIdx] = useState<number | null>(null);
+  const [generatingIdeas, setGeneratingIdeas] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (phase !== "phase1" && phase !== "phase2") return;
@@ -73,9 +79,44 @@ export default function GenerateModal({
     return () => window.removeEventListener("keydown", handler);
   }, [open, handleClose]);
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setUploadedImage(ev.target?.result as string ?? null);
+    reader.readAsDataURL(file);
+  }
+
+  async function handleGenerateIdeas() {
+    if (!idea.trim()) return;
+    setGeneratingIdeas(true);
+    setIdeaImages([]);
+    setSelectedIdeaIdx(null);
+    try {
+      const res = await fetch("/api/generate-image-ideas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: idea.trim() }),
+      });
+      const data = await res.json() as { images?: string[]; error?: string };
+      if (res.ok && data.images?.length) {
+        setIdeaImages(data.images);
+        setSelectedIdeaIdx(0);
+      }
+    } catch {
+      // silent — just skip ideas panel
+    } finally {
+      setGeneratingIdeas(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const text = idea.trim() || placeholder;
+    if (!idea.trim()) {
+      setError("Please describe your startup idea to get started.");
+      return;
+    }
+    const text = idea.trim();
     setError("");
     setPhase("phase1");
 
@@ -124,7 +165,13 @@ export default function GenerateModal({
       const r2 = await fetch("/api/generate-sections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brief, direction: "orchestra", seed: project.id }),
+        body: JSON.stringify({
+          brief,
+          direction: "orchestra",
+          seed: project.id,
+          foundationId: selectedFoundation,
+          referenceImageUrl: selectedIdeaIdx !== null ? ideaImages[selectedIdeaIdx] : (uploadedImage ?? undefined),
+        }),
       });
       const d2 = await r2.json();
       if (!r2.ok) {
@@ -392,6 +439,161 @@ export default function GenerateModal({
                   {error}
                 </div>
               )}
+
+              {/* Template picker */}
+              <div style={{ marginBottom: 18 }}>
+                <p style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: "0.18em",
+                  textTransform: "uppercase", color: "oklch(62% .012 270)",
+                  marginBottom: 10,
+                }}>
+                  Choose template
+                </p>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {([
+                    { id: "foundation-1" as const, label: "Aethera",   sub: "Minimal · serif", emoji: "◻" },
+                    { id: "foundation-2" as const, label: "Cinematic", sub: "Dark · spatial",  emoji: "✦" },
+                    { id: "foundation-3" as const, label: "Future",    sub: "Video · bold",    emoji: "▶" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setSelectedFoundation(opt.id)}
+                      style={{
+                        flex: 1, borderRadius: 12, padding: "12px 10px", textAlign: "left",
+                        border: selectedFoundation === opt.id
+                          ? "1.5px solid oklch(70% .11 295)"
+                          : "1.5px solid oklch(91% .005 270)",
+                        background: selectedFoundation === opt.id
+                          ? "oklch(96% .008 295)"
+                          : "oklch(98.5% .002 270)",
+                        cursor: "pointer", transition: "all 0.16s",
+                        boxShadow: selectedFoundation === opt.id
+                          ? "0 0 0 3px oklch(70% .11 295 / 0.12)"
+                          : "none",
+                      }}
+                    >
+                      <p style={{ fontSize: 14, marginBottom: 3, lineHeight: 1 }}>{opt.emoji}</p>
+                      <p style={{
+                        fontSize: 12, fontWeight: 700,
+                        color: selectedFoundation === opt.id ? "oklch(38% .095 295)" : "oklch(32% .012 275)",
+                        marginBottom: 2,
+                      }}>
+                        {opt.label}
+                      </p>
+                      <p style={{
+                        fontSize: 10,
+                        color: selectedFoundation === opt.id ? "oklch(52% .10 295)" : "oklch(65% .012 270)",
+                      }}>
+                        {opt.sub}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Image reference tools */}
+              <div style={{ marginBottom: 16 }}>
+                <p style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: "0.18em",
+                  textTransform: "uppercase", color: "oklch(62% .012 270)",
+                  marginBottom: 10,
+                }}>
+                  Visual direction <span style={{ fontWeight: 400, opacity: 0.6, textTransform: "none", letterSpacing: 0 }}>(optional)</span>
+                </p>
+                <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
+                  {/* Upload reference */}
+                  <div style={{ flex: 1 }}>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      onChange={handleFileChange}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{
+                        width: "100%", borderRadius: 10, padding: "10px 12px",
+                        border: uploadedImage ? "1.5px solid oklch(70% .11 295)" : "1.5px dashed oklch(85% .005 270)",
+                        background: uploadedImage ? "oklch(96% .008 295)" : "oklch(98.5% .002 270)",
+                        cursor: "pointer", transition: "all 0.15s", textAlign: "left",
+                        display: "flex", alignItems: "center", gap: 8,
+                      }}
+                    >
+                      {uploadedImage ? (
+                        <>
+                          <img src={uploadedImage} alt="" style={{ width: 32, height: 32, borderRadius: 6, objectFit: "cover", flexShrink: 0 }} />
+                          <div>
+                            <p style={{ fontSize: 11, fontWeight: 600, color: "oklch(38% .095 295)", margin: 0 }}>Image uploaded</p>
+                            <p style={{ fontSize: 10, color: "oklch(52% .10 295)", margin: 0 }}>Click to change</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setUploadedImage(null); }}
+                            style={{ marginLeft: "auto", fontSize: 14, color: "oklch(55% .012 270)", background: "none", border: "none", cursor: "pointer", padding: "2px 4px" }}
+                          >×</button>
+                        </>
+                      ) : (
+                        <>
+                          <span style={{ fontSize: 16, flexShrink: 0 }}>↑</span>
+                          <div>
+                            <p style={{ fontSize: 11, fontWeight: 600, color: "oklch(40% .012 275)", margin: 0 }}>Upload reference</p>
+                            <p style={{ fontSize: 10, color: "oklch(62% .012 270)", margin: 0 }}>Guide the visual style</p>
+                          </div>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* AI idea generator */}
+                  <button
+                    type="button"
+                    disabled={generatingIdeas || !idea.trim()}
+                    onClick={handleGenerateIdeas}
+                    style={{
+                      flex: 1, borderRadius: 10, padding: "10px 12px", textAlign: "left",
+                      border: ideaImages.length ? "1.5px solid oklch(70% .11 295)" : "1.5px dashed oklch(85% .005 270)",
+                      background: ideaImages.length ? "oklch(96% .008 295)" : "oklch(98.5% .002 270)",
+                      cursor: idea.trim() ? "pointer" : "default",
+                      opacity: !idea.trim() ? 0.5 : 1,
+                      transition: "all 0.15s",
+                      display: "flex", alignItems: "center", gap: 8,
+                    }}
+                  >
+                    <span style={{ fontSize: 16, flexShrink: 0 }}>{generatingIdeas ? "⟳" : "✦"}</span>
+                    <div>
+                      <p style={{ fontSize: 11, fontWeight: 600, color: "oklch(40% .012 275)", margin: 0 }}>
+                        {generatingIdeas ? "Generating…" : ideaImages.length ? "3 ideas ready" : "Generate ideas"}
+                      </p>
+                      <p style={{ fontSize: 10, color: "oklch(62% .012 270)", margin: 0 }}>3 visual concepts</p>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Idea picker */}
+                {ideaImages.length > 0 && (
+                  <div style={{ marginTop: 10, display: "flex", gap: 6 }}>
+                    {ideaImages.map((src, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setSelectedIdeaIdx(i)}
+                        style={{
+                          flex: 1, padding: 0, border: "none", borderRadius: 8,
+                          outline: selectedIdeaIdx === i ? "2px solid oklch(70% .11 295)" : "2px solid transparent",
+                          outlineOffset: 2,
+                          overflow: "hidden", cursor: "pointer",
+                          aspectRatio: "1 / 1",
+                        }}
+                      >
+                        <img src={src} alt={`Concept ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <div
                 style={{

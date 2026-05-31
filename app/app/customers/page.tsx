@@ -3,7 +3,7 @@
 import Link from "next/link";
 import "../../lovable.css";
 
-const SERIF = "'CameraPlainVariable', Georgia, serif";
+const SERIF = "var(--font-canela), 'Didot', 'Georgia', serif";
 
 export default function CustomersPage() {
   return (
@@ -15,15 +15,6 @@ export default function CustomersPage() {
         radial-gradient(ellipse 50% 30% at 0% 60%, oklch(86% .06 295 / 0.12), transparent 50%)
       `,
     }}>
-      <style>{`
-        @font-face {
-          font-family: 'CameraPlainVariable';
-          src: url('https://cdn.gpteng.co/mcp-widgets/v1/fonts/CameraPlainVariable.woff2') format('woff2');
-          font-weight: 100 900;
-          font-style: normal;
-          font-display: swap;
-        }
-      `}</style>
 
       <nav style={{
         position: "sticky", top: 0, zIndex: 30,

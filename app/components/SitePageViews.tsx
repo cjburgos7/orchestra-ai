@@ -12,7 +12,10 @@ import type { DirectionId } from "@/lib/types/startup";
 import type { WorldV2Package } from "@/lib/world-v2";
 import { WORLD_V2_ENABLED } from "@/lib/world-v2";
 import GeneratedWorldV2 from "./world-v2/GeneratedWorldV2";
-import { LayoutHomePage } from "./LayoutHomePage";
+import Foundation1, { DEFAULT_F1_SLOTS } from "./foundations/Foundation1";
+import Foundation2 from "./foundations/Foundation2";
+import Foundation3 from "./foundations/Foundation3";
+// LayoutHomePage removed — WORLD_V2_ENABLED=true makes that branch permanently unreachable
 import { InlineDashboardPreview, ImmersionStrip, VisualGallery } from "./WebsiteVisuals";
 
 type PageProps = {
@@ -36,6 +39,17 @@ export function HomePageContent({
   accentColor,
   seed,
 }: PageProps) {
+  // Foundation routing: foundation1Slots present = use a foundation template
+  if (sections.foundation1Slots) {
+    if (sections.foundationId === "foundation-2") {
+      return <Foundation2 slots={sections.foundation1Slots} />;
+    }
+    if (sections.foundationId === "foundation-3") {
+      return <Foundation3 slots={sections.foundation1Slots} />;
+    }
+    return <Foundation1 slots={sections.foundation1Slots} />;
+  }
+
   if (WORLD_V2_ENABLED && sections.worldV2) {
     return (
       <>
@@ -69,18 +83,8 @@ export function HomePageContent({
     );
   }
 
-  return (
-    <LayoutHomePage
-      brief={brief}
-      sections={sections}
-      theme={theme}
-      direction={direction}
-      isPreview={isPreview}
-      accentColor={accentColor}
-      logo={sections.visuals?.logo}
-      seed={seed}
-    />
-  );
+  // WORLD_V2_ENABLED is true — this branch is unreachable in production
+  return null;
 }
 
 // ─── World V2 subpage components ────────────────────────────────────────────

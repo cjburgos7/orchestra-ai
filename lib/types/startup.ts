@@ -236,6 +236,39 @@ export type SiteVisuals = {
 };
 
 /** Modular website sections (home page) */
+/** Content slots for Foundation #1 (Aethera template). All structure/motion fixed; only these values change per client. */
+export type Foundation1Slots = {
+  logoText: string;
+  navItems: { label: string; href: string; muted?: boolean }[];
+  navCtaLabel: string;
+  headline: string;
+  /** Substrings of headline to render in #6F6F6F italic */
+  headlineItalicFragments: string[];
+  description: string;
+  heroCtaLabel: string;
+  /** CloudFront or CDN video URL for the looping background */
+  videoUrl: string;
+  /** Hero full-bleed image — DALL-E URL when freshly generated, refreshed on expiry */
+  imageUrl?: string;
+  /** Category key for on-demand image refresh when imageUrl expires */
+  imageCategory?: string;
+  /** Mid-page editorial/lifestyle image (Unsplash CDN — always permanent) */
+  editorialImageUrl?: string;
+  /** Key numbers/stats for the stats band */
+  stats: { value: string; label: string }[];
+  /** How it works — numbered process steps */
+  process: { step: string; title: string; body: string }[];
+  /** Feature cards section */
+  featuresTitle: string;
+  features: { title: string; body: string }[];
+  /** Testimonial quotes */
+  testimonials: { quote: string; name: string; role: string }[];
+  /** Closing CTA section */
+  ctaHeadline: string;
+  ctaBody: string;
+  ctaButtonLabel: string;
+};
+
 export type GeneratedSections = {
   navbar: {
     brandLabel: string;
@@ -258,8 +291,12 @@ export type GeneratedSections = {
   cta: { headline: string; subheadline: string; buttonText: string };
   footer: { tagline: string };
   visuals?: SiteVisuals;
-  /** Isolated World V2 package — when present, ONLY GeneratedWorldV2 renders home */
+  /** Isolated World V2 package — when present, GeneratedWorldV2 renders home (unless foundation1Slots also present) */
   worldV2?: import("@/lib/world-v2").WorldV2Package;
+  /** When present, Foundation #1 component renders home instead of GeneratedWorldV2 */
+  foundation1Slots?: Foundation1Slots;
+  /** Which foundation produced this site */
+  foundationId?: string;
 };
 
 export type AboutPage = {

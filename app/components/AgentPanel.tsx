@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { SitePageId, StartupProject } from "@/lib/types/startup";
 import { SITE_PAGES } from "@/lib/types/startup";
+import type { OutreachPlan, PipelineLead } from "@/lib/outreach";
+import { STAGES, loadOutreachPlans, loadPipelineLeads, addPipelineLead, updateLeadStage } from "@/lib/outreach";
 
 type Message = {
   id: string;
@@ -12,7 +14,8 @@ type Message = {
   ts: number;
 };
 
-type Tab = "chat" | "pages";
+type Tab = "chat" | "pages" | "clients";
+type DraftTab = "email" | "dm" | "inPerson";
 
 type Props = {
   project: StartupProject | null;
@@ -90,6 +93,61 @@ export default function AgentPanel({ project, activePage, onPageChange, onLaunch
   const [initialized, setInitialized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Clients tab state
+  const [outreachInput, setOutreachInput] = useState("");
+  const [outreachLoading, setOutreachLoading] = useState(false);
+  const [outreachPlan, setOutreachPlan] = useState<OutreachPlan | null>(null);
+  const [plans, setPlans] = useState<OutreachPlan[]>([]);
+  const [leads, setLeads] = useState<PipelineLead[]>([]);
+  const [draftTab, setDraftTab] = useState<DraftTab>("email");
+  const [addingLead, setAddingLead] = useState(false);
+  const [newLeadName, setNewLeadName] = useState("");
+  const [newLeadBiz, setNewLeadBiz] = useState("");
+
+  // Load persisted outreach data
+  useEffect(() => {
+    setPlans(loadOutreachPlans());
+    setLeads(loadPipelineLeads());
+  }, []);
+
+  const generatePlan = useCallback(async () => {
+    const niche = outreachInput.trim();
+    if (!niche || outreachLoading) return;
+    setOutreachLoading(true);
+    try {
+      const res = await fetch("/api/outreach/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ niche }),
+      });
+      const data = await res.json();
+      if (data.plan) {
+        setOutreachPlan(data.plan);
+        setPlans(loadOutreachPlans());
+      }
+    } catch {
+      // silent — user sees nothing loaded
+    } finally {
+      setOutreachLoading(false);
+    }
+  }, [outreachInput, outreachLoading]);
+
+  const handleAddLead = useCallback(() => {
+    const name = newLeadName.trim();
+    const business = newLeadBiz.trim();
+    if (!name || !business) return;
+    addPipelineLead(name, business, outreachPlan?.id);
+    setLeads(loadPipelineLeads());
+    setNewLeadName("");
+    setNewLeadBiz("");
+    setAddingLead(false);
+  }, [newLeadName, newLeadBiz, outreachPlan]);
+
+  const handleStageChange = useCallback((leadId: string, stage: PipelineLead["stage"]) => {
+    updateLeadStage(leadId, stage);
+    setLeads(loadPipelineLeads());
+  }, []);
 
   // Initial greeting
   useEffect(() => {
@@ -305,6 +363,7 @@ export default function AgentPanel({ project, activePage, onPageChange, onLaunch
           {([
             { id: "chat" as Tab, label: "Chat" },
             { id: "pages" as Tab, label: "Pages" },
+            { id: "clients" as Tab, label: "Clients" },
           ] as const).map((t) => (
             <button
               key={t.id}
@@ -526,6 +585,341 @@ export default function AgentPanel({ project, activePage, onPageChange, onLaunch
               >
                 Launch {project?.startupName ?? "startup"} →
               </button>
+            </div>
+          )}
+
+          {/* ─── CLIENTS TAB ─── */}
+          {tab === "clients" && (
+            <div className="agent-scroll" style={{ flex: 1, overflowY: "auto", padding: "0.75rem 0.75rem 1rem" }}>
+
+              {/* Generate Plan */}
+              <p style={{
+                fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em",
+                color: "oklch(40% .015 280)", margin: "0 0 0.6rem 0.25rem",
+              }}>
+                Land a Client
+              </p>
+              <div style={{
+                background: "oklch(12% .018 280)",
+                border: "1px solid oklch(18% .022 280)",
+                borderRadius: 10, padding: "0.75rem",
+                marginBottom: "1rem",
+              }}>
+                <textarea
+                  value={outreachInput}
+                  onChange={(e) => setOutreachInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); generatePlan(); } }}
+                  placeholder="Describe the business type or a real lead…"
+                  rows={2}
+                  className="agent-input"
+                  style={{
+                    width: "100%", background: "none", border: "none", resize: "none",
+                    fontSize: 12, lineHeight: 1.5, color: "oklch(88% .008 270)",
+                    fontFamily: "inherit", padding: 0, boxSizing: "border-box",
+                  }}
+                />
+                <button
+                  onClick={generatePlan}
+                  disabled={!outreachInput.trim() || outreachLoading}
+                  style={{
+                    marginTop: "0.5rem", width: "100%", padding: "0.55rem",
+                    borderRadius: 7, border: "none", fontSize: 11, fontWeight: 600,
+                    background: outreachInput.trim() && !outreachLoading
+                      ? "oklch(70% .11 295)"
+                      : "oklch(18% .02 280)",
+                    color: outreachInput.trim() && !outreachLoading ? "#fff" : "oklch(40% .012 270)",
+                    cursor: outreachInput.trim() && !outreachLoading ? "pointer" : "default",
+                    letterSpacing: "0.04em", textTransform: "uppercase",
+                    transition: "background 0.15s, color 0.15s",
+                  }}
+                >
+                  {outreachLoading ? "Generating…" : "Generate Outreach Plan"}
+                </button>
+              </div>
+
+              {/* Past plans quick-load */}
+              {plans.length > 0 && !outreachPlan && (
+                <div style={{ marginBottom: "1rem" }}>
+                  <p style={{
+                    fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em",
+                    color: "oklch(40% .015 280)", margin: "0 0 0.5rem 0.25rem",
+                  }}>Recent Plans</p>
+                  {plans.slice(-3).reverse().map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setOutreachPlan(p)}
+                      style={{
+                        display: "block", width: "100%", textAlign: "left",
+                        padding: "7px 10px", borderRadius: 7, border: "1px solid oklch(18% .022 280)",
+                        background: "oklch(12% .018 280)", cursor: "pointer",
+                        marginBottom: 4, fontSize: 11, color: "oklch(72% .01 270)",
+                        transition: "border-color 0.1s",
+                      }}
+                    >
+                      {p.niche}
+                      <span style={{ float: "right", fontSize: 9, color: "oklch(40% .012 270)" }}>
+                        {new Date(p.createdAt).toLocaleDateString()}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Generated plan display */}
+              {outreachPlan && (
+                <>
+                  {/* ICP */}
+                  <div style={{
+                    background: "oklch(12% .018 280)",
+                    border: "1px solid oklch(18% .022 280)",
+                    borderRadius: 10, padding: "0.75rem", marginBottom: "0.75rem",
+                  }}>
+                    <p style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em", color: "oklch(70% .11 295 / 0.8)", margin: "0 0 0.5rem" }}>
+                      ICP — {outreachPlan.icp.businessType}
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      <div>
+                        <p style={{ fontSize: 9, color: "oklch(40% .012 270)", margin: "0 0 2px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>Pain Points</p>
+                        {outreachPlan.icp.painPoints.map((pt, i) => (
+                          <p key={i} style={{ fontSize: 11, color: "oklch(72% .01 270)", margin: "1px 0" }}>· {pt}</p>
+                        ))}
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 9, color: "oklch(40% .012 270)", margin: "4px 0 2px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>Buy Signals</p>
+                        {outreachPlan.icp.budgetSignals.map((s, i) => (
+                          <p key={i} style={{ fontSize: 11, color: "oklch(72% .01 270)", margin: "1px 0" }}>· {s}</p>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Research Checklist */}
+                  <div style={{
+                    background: "oklch(12% .018 280)",
+                    border: "1px solid oklch(18% .022 280)",
+                    borderRadius: 10, padding: "0.75rem", marginBottom: "0.75rem",
+                  }}>
+                    <p style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em", color: "oklch(70% .11 295 / 0.8)", margin: "0 0 0.5rem" }}>
+                      Research Checklist
+                    </p>
+                    {outreachPlan.researchChecklist.map((item, i) => (
+                      <div key={i} style={{ marginBottom: 6 }}>
+                        <p style={{ fontSize: 11, fontWeight: 500, color: "oklch(80% .008 270)", margin: "0 0 1px" }}>
+                          {i + 1}. {item.task}
+                        </p>
+                        <p style={{ fontSize: 10, color: "oklch(42% .012 270)", margin: 0 }}>
+                          {item.sources.join(", ")}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Outreach Drafts */}
+                  <div style={{
+                    background: "oklch(12% .018 280)",
+                    border: "1px solid oklch(18% .022 280)",
+                    borderRadius: 10, padding: "0.75rem", marginBottom: "0.75rem",
+                  }}>
+                    <p style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em", color: "oklch(70% .11 295 / 0.8)", margin: "0 0 0.5rem" }}>
+                      Outreach Drafts
+                    </p>
+                    <div style={{ display: "flex", gap: 4, marginBottom: "0.6rem" }}>
+                      {(["email", "dm", "inPerson"] as const).map((d) => (
+                        <button
+                          key={d}
+                          onClick={() => setDraftTab(d)}
+                          style={{
+                            flex: 1, padding: "4px 0", borderRadius: 5,
+                            border: "1px solid oklch(22% .022 280)",
+                            background: draftTab === d ? "oklch(70% .11 295 / 0.15)" : "none",
+                            color: draftTab === d ? "oklch(70% .11 295)" : "oklch(42% .012 270)",
+                            fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em",
+                            cursor: "pointer", transition: "background 0.1s, color 0.1s",
+                          }}
+                        >
+                          {d === "inPerson" ? "IRL" : d === "dm" ? "DM" : "Email"}
+                        </button>
+                      ))}
+                    </div>
+                    {draftTab === "email" && (
+                      <>
+                        <p style={{ fontSize: 10, fontWeight: 600, color: "oklch(58% .01 270)", margin: "0 0 4px" }}>
+                          Subject: {outreachPlan.outreachDrafts.emailSubject}
+                        </p>
+                        <p style={{ fontSize: 11, color: "oklch(72% .01 270)", lineHeight: 1.6, margin: 0, whiteSpace: "pre-wrap" }}>
+                          {outreachPlan.outreachDrafts.email}
+                        </p>
+                      </>
+                    )}
+                    {draftTab === "dm" && (
+                      <p style={{ fontSize: 11, color: "oklch(72% .01 270)", lineHeight: 1.6, margin: 0, whiteSpace: "pre-wrap" }}>
+                        {outreachPlan.outreachDrafts.dm}
+                      </p>
+                    )}
+                    {draftTab === "inPerson" && (
+                      <p style={{ fontSize: 11, color: "oklch(72% .01 270)", lineHeight: 1.6, margin: 0, whiteSpace: "pre-wrap" }}>
+                        {outreachPlan.outreachDrafts.inPerson}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* 7-Day Action Plan */}
+                  <div style={{
+                    background: "oklch(12% .018 280)",
+                    border: "1px solid oklch(18% .022 280)",
+                    borderRadius: 10, padding: "0.75rem", marginBottom: "0.75rem",
+                  }}>
+                    <p style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em", color: "oklch(70% .11 295 / 0.8)", margin: "0 0 0.5rem" }}>
+                      7-Day Action Plan
+                    </p>
+                    {outreachPlan.actionPlan.map((day) => (
+                      <div key={day.day} style={{ marginBottom: 8 }}>
+                        <p style={{ fontSize: 10, fontWeight: 700, color: "oklch(70% .11 295)", margin: "0 0 2px" }}>
+                          Day {day.day} — {day.label}
+                        </p>
+                        {day.tasks.map((task, i) => (
+                          <p key={i} style={{ fontSize: 11, color: "oklch(68% .01 270)", margin: "1px 0 1px 8px" }}>
+                            · {task}
+                          </p>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setOutreachPlan(null)}
+                    style={{
+                      width: "100%", padding: "0.45rem", borderRadius: 7,
+                      border: "1px solid oklch(18% .022 280)", background: "none",
+                      color: "oklch(40% .012 270)", fontSize: 10, cursor: "pointer",
+                      marginBottom: "1rem",
+                    }}
+                  >
+                    ← Back to generator
+                  </button>
+                </>
+              )}
+
+              {/* Pipeline Tracker */}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                  <p style={{
+                    fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em",
+                    color: "oklch(40% .015 280)", margin: "0 0 0 0.25rem",
+                  }}>Pipeline</p>
+                  <button
+                    onClick={() => setAddingLead(true)}
+                    style={{
+                      fontSize: 10, fontWeight: 600, padding: "3px 8px",
+                      borderRadius: 5, border: "1px solid oklch(18% .022 280)",
+                      background: "none", color: "oklch(55% .01 270)", cursor: "pointer",
+                    }}
+                  >
+                    + Add Lead
+                  </button>
+                </div>
+
+                {addingLead && (
+                  <div style={{
+                    background: "oklch(12% .018 280)",
+                    border: "1px solid oklch(22% .022 280)",
+                    borderRadius: 8, padding: "0.6rem", marginBottom: "0.6rem",
+                  }}>
+                    <input
+                      value={newLeadName}
+                      onChange={(e) => setNewLeadName(e.target.value)}
+                      placeholder="Contact name"
+                      className="agent-input"
+                      style={{
+                        display: "block", width: "100%", background: "none", border: "none",
+                        fontSize: 12, color: "oklch(88% .008 270)", fontFamily: "inherit",
+                        padding: "0 0 4px", borderBottom: "1px solid oklch(22% .025 280)",
+                        marginBottom: "0.5rem", boxSizing: "border-box",
+                      }}
+                    />
+                    <input
+                      value={newLeadBiz}
+                      onChange={(e) => setNewLeadBiz(e.target.value)}
+                      placeholder="Business name"
+                      className="agent-input"
+                      style={{
+                        display: "block", width: "100%", background: "none", border: "none",
+                        fontSize: 12, color: "oklch(88% .008 270)", fontFamily: "inherit",
+                        padding: "0 0 4px", borderBottom: "1px solid oklch(22% .025 280)",
+                        marginBottom: "0.6rem", boxSizing: "border-box",
+                      }}
+                    />
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button
+                        onClick={handleAddLead}
+                        style={{
+                          flex: 1, padding: "0.4rem", borderRadius: 6, border: "none",
+                          background: "oklch(70% .11 295)", color: "#fff",
+                          fontSize: 10, fontWeight: 700, cursor: "pointer",
+                        }}
+                      >
+                        Add
+                      </button>
+                      <button
+                        onClick={() => { setAddingLead(false); setNewLeadName(""); setNewLeadBiz(""); }}
+                        style={{
+                          padding: "0.4rem 0.75rem", borderRadius: 6,
+                          border: "1px solid oklch(22% .022 280)",
+                          background: "none", color: "oklch(42% .012 270)",
+                          fontSize: 10, cursor: "pointer",
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {leads.length === 0 && !addingLead && (
+                  <p style={{ fontSize: 11, color: "oklch(35% .012 270)", textAlign: "center", padding: "1rem 0" }}>
+                    No leads yet. Generate a plan and add your first lead.
+                  </p>
+                )}
+
+                {leads.map((lead) => {
+                  const stage = STAGES.find((s) => s.id === lead.stage) ?? STAGES[0];
+                  return (
+                    <div
+                      key={lead.id}
+                      style={{
+                        background: "oklch(11% .016 280)",
+                        border: "1px solid oklch(16% .02 280)",
+                        borderRadius: 8, padding: "0.6rem 0.75rem",
+                        marginBottom: 5,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div>
+                          <p style={{ fontSize: 11, fontWeight: 600, color: "oklch(80% .008 270)", margin: 0 }}>{lead.name}</p>
+                          <p style={{ fontSize: 10, color: "oklch(42% .012 270)", margin: 0 }}>{lead.business}</p>
+                        </div>
+                        <select
+                          value={lead.stage}
+                          onChange={(e) => handleStageChange(lead.id, e.target.value as PipelineLead["stage"])}
+                          style={{
+                            background: "oklch(14% .02 280)",
+                            border: "1px solid oklch(22% .022 280)",
+                            borderRadius: 5, padding: "2px 6px",
+                            fontSize: 9, fontWeight: 700,
+                            color: stage.color,
+                            cursor: "pointer", textTransform: "uppercase",
+                            letterSpacing: "0.08em",
+                          }}
+                        >
+                          {STAGES.map((s) => (
+                            <option key={s.id} value={s.id}>{s.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

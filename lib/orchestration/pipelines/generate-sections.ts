@@ -8,9 +8,8 @@ import { getDirectionLabel } from "@/lib/orchestration/directions";
 import { chatCompletionJSON, OrchestrationError } from "@/lib/orchestration/openai-client";
 import { isGeneratedSections } from "@/lib/orchestration/validators";
 import { fallbackSections } from "@/lib/orchestration/pipelines/section-fallback";
-import { buildProductVisuals, buildSectionGenerationContext } from "@/lib/orchestration/product-visuals";
-import { WORLD_V2_ENABLED, buildWorldV2 } from "@/lib/world-v2";
-import { injectFluxHero } from "@/lib/world-v2/flux-generation";
+import { buildSectionGenerationContext } from "@/lib/orchestration/product-visuals";
+import { buildWorldSpec } from "@/lib/buildWorldSpec";
 import { resolutionCopyContext } from "@/lib/orchestration/category-resolution";
 import { imageryCopyGuard } from "@/lib/orchestration/category-imagery";
 import { resolveCategory } from "@/lib/orchestration/category-resolution";
@@ -19,12 +18,23 @@ type Input = {
   brief: StartupBrief;
   direction: DirectionId;
   seed?: string;
+  foundationId?: string;
 };
 
-/** Generates website sections in modular steps for cleaner orchestration */
+/** Generates website sections. Primary path: buildWorldSpec (foundation + Claude + Flux). */
 export async function runGenerateSectionsPipeline(input: Input): Promise<GeneratedSections> {
   const directionLabel = getDirectionLabel(input.direction);
+  const seed = input.seed ?? `${input.brief.name}:${input.direction}`;
 
+  // PRIMARY PATH: buildWorldSpec — one Claude call produces both structure and content
+  try {
+    const { worldV2, sections, foundationId } = await buildWorldSpec(input.brief, seed, input.foundationId);
+    return { ...sections, worldV2, foundationId };
+  } catch (err) {
+    console.warn("[generate-sections] buildWorldSpec failed, falling back to GPT:", (err as Error)?.message ?? err);
+  }
+
+  // LEGACY FALLBACK PATH (GPT text) — only reached if buildWorldSpec throws
   try {
     const [blockA, blockB, blockC] = await Promise.all([
       chatCompletionJSON<Pick<GeneratedSections, "navbar" | "hero">>({
@@ -53,9 +63,7 @@ export async function runGenerateSectionsPipeline(input: Input): Promise<Generat
           },
         ],
       }),
-      chatCompletionJSON<
-        Pick<GeneratedSections, "pricing" | "faq" | "cta" | "footer">
-      >({
+      chatCompletionJSON<Pick<GeneratedSections, "pricing" | "faq" | "cta" | "footer">>({
         temperature: 0.75,
         messages: [
           {
@@ -81,33 +89,13 @@ export async function runGenerateSectionsPipeline(input: Input): Promise<Generat
       footer: blockC.footer,
     };
 
-    if (isGeneratedSections(merged)) {
-      const seed = input.seed ?? `${input.brief.name}:${input.direction}`;
-      if (WORLD_V2_ENABLED) {
-        return {
-          ...merged,
-          worldV2: await injectFluxHero(buildWorldV2(input.brief, seed), input.brief),
-        };
-      }
-      return {
-        ...merged,
-        visuals: await buildProductVisuals(input.brief, seed, input.direction),
-      };
-    }
+    if (isGeneratedSections(merged)) return merged;
   } catch (err) {
     if (err instanceof OrchestrationError && err.status !== 502) throw err;
-    console.warn("Modular generation fallback:", err);
+    console.warn("GPT fallback failed:", err);
   }
 
-  const seed = input.seed ?? `${input.brief.name}:${input.direction}`;
-  const fallback = fallbackSections(input.brief, directionLabel);
-  if (WORLD_V2_ENABLED) {
-    return { ...fallback, worldV2: await injectFluxHero(buildWorldV2(input.brief, seed), input.brief) };
-  }
-  return {
-    ...fallback,
-    visuals: await buildProductVisuals(input.brief, seed, input.direction),
-  };
+  return fallbackSections(input.brief, directionLabel);
 }
 
 export async function runRegenerateSectionPipeline(

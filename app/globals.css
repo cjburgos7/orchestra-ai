@@ -1,8 +1,17 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'CameraPlainVariable';
+  src: url('/fonts/CameraPlainVariable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --font-canela: 'CameraPlainVariable', Georgia, serif;
 }
 
 @theme inline {
@@ -10,6 +19,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-canela), 'Georgia', serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,7 +32,6 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 @keyframes shimmer {
@@ -34,3 +43,88 @@ body {
 .animate-shimmer {
   animation: shimmer 1.5s infinite linear;
 }
+
+/* ─── Foundation #1 — Aethera animations ────────────────────────────────── */
+@keyframes fade-rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+.animate-fade-rise {
+  animation: fade-rise 0.8s ease-out both;
+}
+.animate-fade-rise-delay {
+  animation: fade-rise 0.8s ease-out 0.2s both;
+}
+.animate-fade-rise-delay-2 {
+  animation: fade-rise 0.8s ease-out 0.4s both;
+}
+
+/* Foundation #1 — animated atmospheric orbs */
+@keyframes f1-orb-1 {
+  0%,100% { transform: translate(0,     0)    scale(1);    }
+  33%     { transform: translate(40px,  -30px) scale(1.06); }
+  66%     { transform: translate(-25px,  20px) scale(0.94); }
+}
+@keyframes f1-orb-2 {
+  0%,100% { transform: translate(0,     0)    scale(1);    }
+  50%     { transform: translate(-50px,  35px) scale(1.09); }
+}
+@keyframes f1-orb-3 {
+  0%,100% { transform: translate(0,     0)    scale(1);    }
+  25%     { transform: translate(25px,   45px) scale(0.93); }
+  75%     { transform: translate(-35px, -15px) scale(1.04); }
+}
+.f1-orb-1 { animation: f1-orb-1 18s ease-in-out infinite; }
+.f1-orb-2 { animation: f1-orb-2 24s ease-in-out infinite; }
+.f1-orb-3 { animation: f1-orb-3 20s ease-in-out infinite; }
+
+/* Foundation #1 — Ken Burns cinematic zoom for hero image */
+@keyframes f1-ken-burns {
+  0%   { transform: scale(1)    translateX(0%)    translateY(0%);    }
+  50%  { transform: scale(1.10) translateX(-1.5%) translateY(-0.8%); }
+  100% { transform: scale(1.16) translateX(2%)    translateY(-1.5%); }
+}
+.f1-ken-burns {
+  animation: f1-ken-burns 24s ease-in-out infinite alternate;
+  transform-origin: center center;
+}
+
+/* Foundation #1 — 3D card tilt effect */
+.f1-card-3d {
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s;
+  transform-style: preserve-3d;
+  perspective: 800px;
+}
+.f1-card-3d:hover {
+  transform: translateY(-6px) rotateX(2deg) rotateY(-1.5deg) scale(1.02);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
+}
+
+/* Foundation #1 — section slide-in for scroll reveals */
+@keyframes f1-slide-in {
+  from { opacity: 0; transform: translateY(36px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.f1-reveal {
+  animation: f1-slide-in 0.75s cubic-bezier(0.22,1,0.36,1) both;
+}
+.f1-reveal-1 { animation-delay: 0ms; }
+.f1-reveal-2 { animation-delay: 100ms; }
+.f1-reveal-3 { animation-delay: 200ms; }
+
+/* Foundation #1 — stat counter float */
+@keyframes f1-float {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-6px); }
+}
+.f1-stat-float {
+  animation: f1-float 4s ease-in-out infinite;
+}
+
+/* Foundation #1 — stronger orb pulse */
+@keyframes f1-orb-pulse {
+  0%,100% { opacity: 0.6; transform: scale(1); }
+  50%     { opacity: 1; transform: scale(1.12); }
+}
+.f1-orb-pulse { animation: f1-orb-pulse 6s ease-in-out infinite; }

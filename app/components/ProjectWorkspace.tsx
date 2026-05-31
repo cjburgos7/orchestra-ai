@@ -9,6 +9,7 @@ import { migrateProject } from "@/lib/persistence/projects";
 import ProjectWebsite from "./ProjectWebsite";
 import LaunchModal from "./LaunchModal";
 import AgentPanel from "./AgentPanel";
+import FloatingAgent from "./FloatingAgent";
 
 type Props = {
   initialProject: StartupProject;
@@ -31,6 +32,13 @@ export default function ProjectWorkspace({ initialProject }: Props) {
   const brief = briefFromProject(project);
   const sections = project.generatedSections;
   const direction = project.selectedDirection ?? "orchestra";
+
+  // Foundation templates are single-page sites — hide multi-page tabs that would
+  // render a completely different shell (SiteNavigation + generic page views)
+  const isFoundationTemplate = !!(
+    sections?.foundation1Slots ||
+    sections?.foundationId?.startsWith("foundation-")
+  );
 
   if (!sections) {
     return (
@@ -129,9 +137,9 @@ export default function ProjectWorkspace({ initialProject }: Props) {
               {project.slug}.orchestra.ai{activePage !== "home" ? `/${activePage}` : ""}
             </div>
 
-            {/* Page tabs */}
+            {/* Page tabs — Foundation templates are single-page, only show Home */}
             <div style={{ display: "flex", gap: 1, marginLeft: "auto" }}>
-              {SITE_PAGES.slice(0, 7).map((p) => (
+              {(isFoundationTemplate ? SITE_PAGES.slice(0, 1) : SITE_PAGES.slice(0, 7)).map((p) => (
                 <button
                   key={p.id}
                   type="button"
@@ -156,7 +164,7 @@ export default function ProjectWorkspace({ initialProject }: Props) {
             style={{ borderBottom: "1px solid oklch(14% .02 280)", background: "oklch(10% .02 280)" }}
           >
             <div className="flex gap-1 overflow-x-auto pb-0.5">
-              {SITE_PAGES.map((p) => (
+              {(isFoundationTemplate ? SITE_PAGES.slice(0, 1) : SITE_PAGES).map((p) => (
                 <button
                   key={p.id}
                   type="button"
@@ -199,6 +207,11 @@ export default function ProjectWorkspace({ initialProject }: Props) {
         projectSlug={project.slug}
         project={project}
       />
+
+      {/* Floating agent — mobile only (desktop has AgentPanel sidebar) */}
+      <div className="lg:hidden">
+        <FloatingAgent />
+      </div>
     </div>
   );
 }

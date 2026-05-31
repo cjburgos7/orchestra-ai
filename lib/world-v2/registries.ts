@@ -37,7 +37,7 @@ const REGISTRIES: Record<V2CategoryKey, CategoryRegistry> = {
     images: [
       { id: "1465101162946-4377e57745c3", role: "hero", alt: "Botanical garden pathway" },
       { id: "1487530811176-3780de880c2d", role: "editorial", alt: "Nature botanical editorial" },
-      { id: "1526379095098-d400fd0bf935", role: "feature", alt: "Botanical still life" },
+      { id: "1490759847868-88d4476a2101", role: "feature", alt: "Luxury floral editorial" },
       { id: "1441974231531-c6227db76b6e", role: "ambient", alt: "Natural light botanical atmosphere" },
       { id: "1501004318641-b39e6451bec6", role: "detail", alt: "Floral detail macro" },
     ],

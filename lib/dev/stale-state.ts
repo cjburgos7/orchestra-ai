@@ -1,5 +1,5 @@
 /** Dev-only: invalidate stale localStorage worlds when pipeline version bumps. */
-export const PIPELINE_STORAGE_VERSION = "2026-05-24-semantic-visual-retrieval";
+export const PIPELINE_STORAGE_VERSION = "2026-05-29-fix-migration-overwrite";
 
 const STORAGE_KEY = "orchestra_projects_v1";
 const VERSION_KEY = "orchestra_pipeline_version";

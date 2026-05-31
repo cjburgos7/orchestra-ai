@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import "../lovable.css";
+import FloatingAgent from "@/app/components/FloatingAgent";
 
-const GENERATE_URL = "/app?generate=1";
 const APP_URL = "/app";
 
 /* ─── font constant — inline style applied directly on every display element ─── */
-const SERIF = "'CameraPlainVariable', 'Georgia', serif";
+const SERIF = "var(--font-canela), 'Didot', 'Georgia', serif";
 
 /* ══════════════════════════════════════════════════════════
    ICONS
@@ -142,9 +142,9 @@ function MetricBox({ label, value }: { label: string; value: string }) {
   );
 }
 
-function PrimaryCTA({ label = "Start a company" }: { label?: string }) {
+function PrimaryCTA({ label = "Start a company", href = "/app?generate=1" }: { label?: string; href?: string }) {
   return (
-    <Link href={GENERATE_URL} style={{
+    <Link href={href} style={{
       display: "inline-flex", alignItems: "center", gap: 8,
       borderRadius: 10, background: "var(--graphite)",
       padding: "11px 22px", fontSize: 14, fontWeight: 500,
@@ -256,33 +256,64 @@ function IntegrationGrid() {
    PAGE
 ══════════════════════════════════════════════════════════ */
 export default function LandingPage() {
+  const generateUrl = "/app?generate=1";
+
   return (
     <>
-      {/* Font-face inline — guarantees loading even if lovable.css is deferred */}
+      {/* Scroll animations */}
       <style>{`
-        @font-face {
-          font-family: 'CameraPlainVariable';
-          src: url('https://cdn.gpteng.co/mcp-widgets/v1/fonts/CameraPlainVariable.woff2') format('woff2');
-          font-weight: 100 900;
-          font-style: normal;
-          font-display: swap;
+        @keyframes lp-rise {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes lp-fade {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        .lp-rise-1 { animation: lp-rise 0.7s cubic-bezier(0.22,1,0.36,1) 0.05s both; }
+        .lp-rise-2 { animation: lp-rise 0.7s cubic-bezier(0.22,1,0.36,1) 0.18s both; }
+        .lp-rise-3 { animation: lp-rise 0.7s cubic-bezier(0.22,1,0.36,1) 0.32s both; }
+        .lp-rise-4 { animation: lp-rise 0.7s cubic-bezier(0.22,1,0.36,1) 0.45s both; }
+        .lp-rise-5 { animation: lp-rise 0.7s cubic-bezier(0.22,1,0.36,1) 0.58s both; }
+        .lp-fade-in { animation: lp-fade 0.8s ease 0.1s both; }
+        .surface-card {
+          transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), box-shadow 0.2s;
+        }
+        .surface-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 24px oklch(20% .01 270 / 0.1), 0 1px 2px oklch(20% .01 270 / 0.05);
+        }
+        .arc-grid .surface-card {
+          transition: transform 0.22s cubic-bezier(0.22,1,0.36,1), box-shadow 0.22s, border-color 0.18s;
+        }
+        .arc-grid .surface-card:hover {
+          transform: translateY(-4px) scale(1.02);
+          box-shadow: 0 8px 32px oklch(20% .01 270 / 0.12);
+          border-color: oklch(82% .06 295 / 0.4) !important;
+        }
+        .pillars-grid .surface-card {
+          transition: transform 0.22s cubic-bezier(0.22,1,0.36,1), box-shadow 0.22s;
+        }
+        .pillars-grid .surface-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 40px oklch(20% .01 270 / 0.12);
         }
       `}</style>
 
       <div
         className="lovable-root grain relative min-h-screen overflow-x-hidden"
         style={{
-          /* Lavender-tinted platinum background — matches Lovable */
-          background: "oklch(98.5% .002 270)",
+          background: "oklch(97.8% .008 285)",
           color: "oklch(22% .012 270)",
         }}
       >
-        {/* ── Lavender atmospheric wash ── */}
+        {/* ── Lavender atmospheric wash — stronger to match Lovable ── */}
         <div aria-hidden="true" className="pointer-events-none fixed inset-0" style={{
           zIndex: 0,
           background: [
-            "radial-gradient(ellipse 80% 55% at 65% -5%, oklch(88% .07 295 / 0.35), transparent 55%)",
-            "radial-gradient(ellipse 50% 30% at 0% 60%, oklch(86% .06 295 / 0.12), transparent 50%)",
+            "radial-gradient(ellipse 90% 60% at 65% -5%, oklch(88% .09 295 / 0.55), transparent 58%)",
+            "radial-gradient(ellipse 55% 35% at 0% 60%, oklch(86% .08 295 / 0.22), transparent 55%)",
+            "radial-gradient(ellipse 40% 25% at 100% 80%, oklch(88% .07 295 / 0.15), transparent 50%)",
           ].join(", "),
         }} />
 
@@ -299,11 +330,12 @@ export default function LandingPage() {
               <span style={{ fontSize: 15, fontWeight: 500, letterSpacing: "-0.02em", color: "var(--graphite)" }}>Orchestra</span>
             </div>
             <nav className="hidden items-center gap-7 md:flex" style={{ fontSize: 13, color: "var(--muted-foreground)" }}>
-              {[["#workspace","Workspace"],["#pillars","How it works"],["#copilot","Orchestra AI"],["#integrations","Integrations"]].map(([href, label]) => (
+              {[["#workspace","Workspace"],["#leads","Leads & Outreach"],["#copilot","Orchestra AI"],["#integrations","Integrations"]].map(([href, label]) => (
                 <a key={href} href={href} style={{ textDecoration: "none", color: "inherit" }}>{label}</a>
               ))}
             </nav>
             <div className="flex items-center gap-2">
+              <Link href="/projects" className="hidden sm:block" style={{ fontSize: 13, color: "var(--muted-foreground)", textDecoration: "none" }}>My startups</Link>
               <Link href={APP_URL} className="hidden sm:block" style={{ fontSize: 13, color: "var(--muted-foreground)", textDecoration: "none" }}>Sign in</Link>
               <PrimaryCTA label="Get started" />
             </div>
@@ -312,7 +344,7 @@ export default function LandingPage() {
 
         {/* ══ HERO ════════════════════════════════════════════ */}
         <section className="relative z-10 mx-auto max-w-[920px] px-6 pt-16 text-center sm:pt-24">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1" style={{
+          <div className="lp-rise-1 mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1" style={{
             border: "1px solid var(--border)",
             background: "oklch(99.5% .001 270 / 0.7)",
             backdropFilter: "blur(8px)",
@@ -322,13 +354,12 @@ export default function LandingPage() {
             Now in private preview
           </div>
 
-          {/* h1 — font applied inline to guarantee CameraPlainVariable */}
-          <h1 style={{
+          <h1 className="lp-rise-2" style={{
             fontFamily: SERIF,
             fontSize: "clamp(52px, 9vw, 88px)",
-            fontWeight: 400,
-            letterSpacing: "-0.02em",
-            lineHeight: 0.95,
+            fontWeight: 300,
+            letterSpacing: "-0.03em",
+            lineHeight: 1.0,
             color: "var(--graphite)",
           }}>
             The founder<br />
@@ -343,7 +374,7 @@ export default function LandingPage() {
             </span>.
           </h1>
 
-          <p className="mx-auto mt-6 max-w-[600px] leading-relaxed" style={{
+          <p className="lp-rise-3 mx-auto mt-6 max-w-[600px] leading-relaxed" style={{
             fontSize: "clamp(15px, 2vw, 17px)", color: "var(--muted-foreground)", marginTop: 24,
           }}>
             Orchestra takes a founder from idea to operating company. Not a website builder.
@@ -351,7 +382,7 @@ export default function LandingPage() {
             and runs the rails behind them.
           </p>
 
-          <div className="mx-auto mt-7 inline-flex flex-wrap items-center justify-center gap-1.5 rounded-full px-3 py-1.5" style={{
+          <div className="lp-rise-4 mx-auto mt-7 inline-flex flex-wrap items-center justify-center gap-1.5 rounded-full px-3 py-1.5" style={{
             border: "1px solid var(--border)",
             background: "oklch(99.5% .001 270 / 0.7)",
             backdropFilter: "blur(8px)",
@@ -365,13 +396,41 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-3" style={{ marginTop: 28 }}>
-            <PrimaryCTA label="Start a company" />
+          <div className="lp-rise-5 flex flex-wrap items-center justify-center gap-3" style={{ marginTop: 32 }}>
+            <Link href={generateUrl} style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              borderRadius: 10, background: "var(--graphite)",
+              padding: "13px 28px", fontSize: 14, fontWeight: 500,
+              color: "oklch(98% .003 270)", textDecoration: "none",
+              boxShadow: "inset 0 1px 0 oklch(100% 0 0 / 0.12), 0 4px 16px oklch(28% .015 280 / 0.25)",
+              transition: "transform 0.15s, box-shadow 0.15s",
+            }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
+                (e.currentTarget as HTMLElement).style.boxShadow = "inset 0 1px 0 oklch(100% 0 0 / 0.12), 0 8px 24px oklch(28% .015 280 / 0.35)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.transform = "";
+                (e.currentTarget as HTMLElement).style.boxShadow = "inset 0 1px 0 oklch(100% 0 0 / 0.12), 0 4px 16px oklch(28% .015 280 / 0.25)";
+              }}
+            >
+              Start a company <ArrowRight size={14} />
+            </Link>
             <a href="#workspace" style={{
               display: "inline-flex", alignItems: "center", gap: 8,
-              borderRadius: 10, padding: "11px 22px", fontSize: 14,
+              borderRadius: 10, padding: "13px 22px", fontSize: 14,
               color: "var(--muted-foreground)", border: "1px solid var(--border)", textDecoration: "none",
-            }}>
+              transition: "border-color 0.15s, color 0.15s",
+            }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = "oklch(70% .11 295 / 0.5)";
+                (e.currentTarget as HTMLElement).style.color = "var(--graphite)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
+                (e.currentTarget as HTMLElement).style.color = "var(--muted-foreground)";
+              }}
+            >
               Watch the tour
             </a>
           </div>
@@ -405,8 +464,7 @@ export default function LandingPage() {
                       <span style={{ color: "var(--lavender)" }}><Sparkles /></span>
                       Founder workspace
                     </div>
-                    {/* Workspace name — CameraPlainVariable applied inline */}
-                    <div style={{ fontFamily: SERIF, fontSize: "clamp(28px, 3.5vw, 40px)", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1, color: "var(--graphite)", marginTop: 4 }}>
+                    <div style={{ fontFamily: SERIF, fontSize: "clamp(28px, 3.5vw, 40px)", fontWeight: 300, letterSpacing: "-0.03em", lineHeight: 1, color: "var(--graphite)", marginTop: 4 }}>
                       Loomly<span style={{ color: "var(--lavender)" }}>.</span>
                     </div>
                     <div style={{ fontSize: 13, fontStyle: "italic", color: "var(--muted-foreground)", marginTop: 2 }}>Day 14 · Pre-launch · 8 integrations live</div>
@@ -645,8 +703,8 @@ export default function LandingPage() {
             <style>{`@media(min-width:768px){.pillars-grid{grid-template-columns:repeat(3,1fr)!important}}`}</style>
             <div className="pillars-grid" style={{ display: "contents" }}>
               {[
-                { icon: <Wand />, label: "Generate", desc: "Identity, audience, positioning, pricing, and a roadmap — drafted in seconds with the taste of a senior operator.", cta: "Generate your startup", href: GENERATE_URL },
-                { icon: <Rocket size={16} />, label: "Launch", desc: "Site, waitlist, payments, and outbound wired together. Ship publicly without stitching ten tools yourself.", cta: "Launch your business", href: GENERATE_URL },
+                { icon: <Wand />, label: "Generate", desc: "Identity, audience, positioning, pricing, and a roadmap — drafted in seconds with the taste of a senior operator.", cta: "Generate your startup", href: generateUrl },
+                { icon: <Rocket size={16} />, label: "Launch", desc: "Site, waitlist, payments, and outbound wired together. Ship publicly without stitching ten tools yourself.", cta: "Launch your business", href: generateUrl },
                 { icon: <Workflow size={16} />, label: "Operate", desc: "Stripe, Resend, Slack, GitHub and more plug in as native rails. Orchestra runs the loops, you make the calls.", cta: "View integrations", href: "#integrations" },
               ].map((pillar) => (
                 <div key={pillar.label} className="surface-card group relative flex flex-col overflow-hidden rounded-2xl p-6">
@@ -779,6 +837,55 @@ export default function LandingPage() {
         </section>
 
         {/* ══ INTEGRATIONS ════════════════════════════════════ */}
+        {/* ══ LEADS & OUTREACH ════════════════════════════════ */}
+        <section id="leads" className="relative z-10 mx-auto mt-28 max-w-[1180px] px-6">
+          <div aria-hidden="true" className="absolute -right-32 top-0 h-72 w-72 rounded-full blur-3xl" style={{ background: "var(--gradient-lavender)", opacity: 0.18 }} />
+          <div className="relative">
+            <SectionLabel icon={<Users size={12} />}>Client acquisition</SectionLabel>
+            <h2 style={{ fontFamily: SERIF, fontSize: "clamp(36px, 4.5vw, 56px)", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 0.95, color: "var(--graphite)", marginTop: 12, maxWidth: 700 }}>
+              From zero to first client<br />
+              in <span style={{ fontStyle: "italic" }}>one session</span>.
+            </h2>
+            <p style={{ fontSize: 15, color: "var(--muted-foreground)", lineHeight: 1.6, marginTop: 16, maxWidth: 520 }}>
+              Orchestra finds local businesses with weak websites, qualifies them, and drafts personalized outreach — so you go in with context, not cold.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginTop: 40 }}>
+              {[
+                { n: "01", icon: <Globe size={16} />, label: "Discover", desc: "Input a niche and city. Orchestra produces Google search queries, local directories, and a qualification checklist — all in under a minute." },
+                { n: "02", icon: <FileText size={16} />, label: "Qualify", desc: "Score each lead by website quality, social presence, and fit. Flag the best opportunities automatically before you spend a single minute on outreach." },
+                { n: "03", icon: <Mail size={16} />, label: "Outreach", desc: "3 personalized drafts per lead — email with opt-out, Instagram DM, in-person opener — referencing their specific website weakness. Founder approves, then sends." },
+              ].map((step, i) => (
+                <div key={i} className="surface-card rounded-2xl p-5">
+                  <div style={{ fontFamily: "var(--font-mono, monospace)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--muted-foreground)" }}>{step.n}</div>
+                  <div className="mt-3 flex h-9 w-9 items-center justify-center rounded-lg" style={{ background: "var(--gradient-platinum)", boxShadow: "inset 0 1px 0 oklch(100% 0 0 / 0.9)", color: "var(--lavender)" }}>{step.icon}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: "var(--graphite)", marginTop: 12 }}>{step.label}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted-foreground)", lineHeight: 1.5, marginTop: 4 }}>{step.desc}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+              {[
+                { icon: <TrendingUp size={14} />, label: "Pipeline tracking", desc: "Move leads from contacted → demo → proposal → closed. Every stage persists. The agent knows where every prospect stands." },
+                { icon: <Zap size={14} />, label: "7-day action plan", desc: "Orchestra generates a concrete daily plan starting with warm connections — family, school, local — before cold outreach. No generic advice." },
+              ].map((item, i) => (
+                <div key={i} className="surface-card rounded-2xl p-5 flex gap-4 items-start">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg" style={{ background: "var(--gradient-platinum)", boxShadow: "inset 0 1px 0 oklch(100% 0 0 / 0.9)", color: "var(--lavender)" }}>{item.icon}</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: "var(--graphite)" }}>{item.label}</div>
+                    <div style={{ fontSize: 12, color: "var(--muted-foreground)", lineHeight: 1.5, marginTop: 4 }}>{item.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 flex items-center gap-3" style={{ marginTop: 28 }}>
+              <Link href="/app/leads" style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 10, background: "var(--graphite)", padding: "11px 22px", fontSize: 14, fontWeight: 500, color: "oklch(98% .003 270)", textDecoration: "none", boxShadow: "inset 0 1px 0 oklch(100% 0 0 / 0.12), 0 4px 16px oklch(28% .015 280 / 0.25)" }}>
+                Open Leads <ArrowRight size={14} />
+              </Link>
+              <span style={{ fontSize: 12, color: "var(--muted-foreground)" }}>Or ask the agent below ↓</span>
+            </div>
+          </div>
+        </section>
+
         <section id="integrations" className="relative z-10 mx-auto mt-28 max-w-[1180px] px-6">
           <SectionLabel icon={<Workflow />}>Native rails</SectionLabel>
           <h2 style={{ fontFamily: SERIF, fontSize: "clamp(36px, 4.5vw, 56px)", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 0.95, color: "var(--graphite)", marginTop: 12, maxWidth: 700 }}>
@@ -826,6 +933,8 @@ export default function LandingPage() {
         </footer>
 
       </div>
+
+      <FloatingAgent />
     </>
   );
 }

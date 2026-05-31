@@ -1051,6 +1051,13 @@ function V2GenerateModal({ open, onClose }: { open: boolean; onClose: () => void
   const [previewName, setPreviewName] = useState("");
   const [previewTagline, setPreviewTagline] = useState("");
   const [placeholder] = useState(() => PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
+  const [selectedFoundation, setSelectedFoundation] = useState<"foundation-1" | "foundation-2" | "foundation-3">(() => {
+    if (typeof window === "undefined") return "foundation-1";
+    const param = new URLSearchParams(window.location.search).get("foundation");
+    if (param === "foundation-2") return "foundation-2";
+    if (param === "foundation-3") return "foundation-3";
+    return "foundation-1";
+  });
 
   useEffect(() => {
     if (phase !== "phase1" && phase !== "phase2") return;
@@ -1107,7 +1114,7 @@ function V2GenerateModal({ open, onClose }: { open: boolean; onClose: () => void
       const r2 = await fetch("/api/generate-sections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brief, direction: "orchestra", seed: project.id }),
+        body: JSON.stringify({ brief, direction: "orchestra", seed: project.id, foundationId: selectedFoundation }),
       });
       const d2 = await r2.json();
       if (!r2.ok) { setError(d2.error ?? "World generation failed"); setPhase("input"); return; }
@@ -1165,6 +1172,7 @@ function V2GenerateModal({ open, onClose }: { open: boolean; onClose: () => void
           {/* Panel */}
           <motion.div
             className="relative w-full max-w-xl mx-4"
+            style={{ maxHeight: "calc(100vh - 40px)", overflowY: "auto" }}
             initial={{ opacity: 0, y: 32, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.97 }}
@@ -1283,6 +1291,60 @@ function V2GenerateModal({ open, onClose }: { open: boolean; onClose: () => void
                     {error}
                   </div>
                 )}
+
+                {/* Template picker — prominent */}
+                <div style={{ marginBottom: 22 }}>
+                  <p style={{
+                    fontSize: 11, fontWeight: 700, letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.65)",
+                    marginBottom: 12,
+                  }}>
+                    ✦ Choose your template
+                  </p>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    {[
+                      { id: "foundation-1" as const, label: "Aethera",   sub: "Minimal · editorial · serif", emoji: "◻" },
+                      { id: "foundation-2" as const, label: "Cinematic", sub: "Dark · atmospheric · spatial", emoji: "✦" },
+                      { id: "foundation-3" as const, label: "Future",    sub: "Video · typewriter · bold",   emoji: "▶" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setSelectedFoundation(opt.id)}
+                        style={{
+                          flex: 1, borderRadius: 14, padding: "14px 16px", textAlign: "left",
+                          border: selectedFoundation === opt.id
+                            ? `1.5px solid ${T.accent}`
+                            : "1.5px solid rgba(255,255,255,0.15)",
+                          background: selectedFoundation === opt.id
+                            ? `${T.accent}22`
+                            : "rgba(255,255,255,0.06)",
+                          cursor: "pointer", transition: "all 0.18s",
+                          boxShadow: selectedFoundation === opt.id
+                            ? `0 0 0 3px ${T.accent}22`
+                            : "none",
+                        }}
+                      >
+                        <p style={{ fontSize: 16, marginBottom: 4, lineHeight: 1 }}>{opt.emoji}</p>
+                        <p style={{
+                          fontSize: 14, fontWeight: 700,
+                          color: selectedFoundation === opt.id ? "#fff" : "rgba(255,255,255,0.75)",
+                          marginBottom: 3,
+                        }}>
+                          {opt.label}
+                        </p>
+                        <p style={{
+                          fontSize: 11, color: selectedFoundation === opt.id
+                            ? T.accentSoft
+                            : "rgba(255,255,255,0.4)",
+                        }}>
+                          {opt.sub}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 <div style={{
                   background: "rgba(255,255,255,0.04)",

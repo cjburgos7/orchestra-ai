@@ -6,7 +6,7 @@ import "../lovable.css";
 import { listProjects } from "@/lib/persistence/projects";
 import type { StartupProject } from "@/lib/types/startup";
 
-const SERIF = "'CameraPlainVariable', Georgia, serif";
+const SERIF = "var(--font-canela), 'Didot', 'Georgia', serif";
 
 function LogoMark({ size = 28 }: { size?: number }) {
   return (
@@ -115,16 +115,6 @@ export default function ProjectsPage() {
         radial-gradient(ellipse 50% 30% at 0% 60%, oklch(86% .06 295 / 0.12), transparent 50%)
       `,
     }}>
-      <style>{`
-        @font-face {
-          font-family: 'CameraPlainVariable';
-          src: url('https://cdn.gpteng.co/mcp-widgets/v1/fonts/CameraPlainVariable.woff2') format('woff2');
-          font-weight: 100 900;
-          font-style: normal;
-          font-display: swap;
-        }
-      `}</style>
-
       {/* Nav */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 30,

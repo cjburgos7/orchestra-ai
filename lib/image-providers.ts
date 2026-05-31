@@ -250,7 +250,6 @@ export async function fetchFromDallE(
         n: 1,
         size: "1792x1024",
         quality: "standard",
-        style: "natural", // 'natural' = photorealistic, not illustrated
       }),
       signal: AbortSignal.timeout(30_000), // DALL-E can take up to 20s
     });

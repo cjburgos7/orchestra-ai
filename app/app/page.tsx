@@ -7,14 +7,11 @@ import "../lovable.css";
 import { listProjects } from "@/lib/persistence/projects";
 import type { StartupProject } from "@/lib/types/startup";
 import GenerateModal from "@/app/components/GenerateModal";
-import OrchestraAgent from "@/app/components/OrchestraAgent";
-import {
-  buildStartupContext,
-  buildRecommendations,
-} from "@/lib/agent";
+import FloatingAgent from "@/app/components/FloatingAgent";
+import { buildStartupContext, buildRecommendations } from "@/lib/agent";
 
 /* ─── Design tokens ──────────────────────────────────────────────── */
-const SERIF = "'CameraPlainVariable', Georgia, serif";
+const SERIF = "var(--font-canela), 'Didot', 'Georgia', serif";
 
 /* ─── Icons ──────────────────────────────────────────────────────── */
 const Plus = () => (
@@ -154,14 +151,6 @@ function WorkspaceInner() {
 
   return (
     <div className="lovable-root grain" style={{ minHeight: "100vh", position: "relative" }}>
-      <style>{`
-        @font-face {
-          font-family: 'CameraPlainVariable';
-          src: url('https://cdn.gpteng.co/mcp-widgets/v1/fonts/CameraPlainVariable.woff2') format('woff2');
-          font-weight: 100 900; font-style: normal; font-display: swap;
-        }
-      `}</style>
-
       {/* Page background */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0,
         background: [
@@ -439,7 +428,7 @@ function WorkspaceInner() {
       <GenerateModal open={modalOpen} onClose={() => setModalOpen(false)} />
 
       {/* Agent */}
-      <OrchestraAgent project={mostRecentProject} />
+      <FloatingAgent />
     </div>
   );
 }

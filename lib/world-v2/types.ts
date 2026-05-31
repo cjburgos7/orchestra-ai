@@ -90,6 +90,37 @@ export type SemanticRetrievalTrace = {
   rejectedCount: number;
 };
 
+/**
+ * World identity — generated from startup brief by orchestra-world-design.
+ * Drives atmosphere, palette, typography, image direction, AND section structure.
+ * All fields consumed by buildWorldV2 and injectFluxHero.
+ *
+ * sectionSequence replaces variant.sectionBlueprint as the structural driver.
+ * It must be derived from the startup's visitor journey, not from its category.
+ */
+export type WorldIdentity = {
+  atmosphere: string;
+  visualMood: string;
+  background: string;
+  foreground: string;
+  accentColor: string;
+  meshFrom: string;
+  meshTo: string;
+  typographyFeel: "editorial-serif" | "bold-sans" | "precision-mono" | "modern-sans";
+  motionFeel: "calm" | "cinematic" | "energetic" | "editorial";
+  heroSceneDirection: string;
+  featureSceneDirection: string;
+  editorialSceneDirection: string;
+  /** Ordered section sequence — the startup's storytelling arc. Drives structure. */
+  sectionSequence: V2SectionType[];
+  /** Overall density for all sections */
+  sectionDensity: "sparse" | "balanced" | "dense";
+  /** The visitor journey archetype for this specific startup */
+  storyArc: "emotion-first" | "proof-first" | "product-first" | "brand-first";
+  /** WHY this startup received this sequence — must not reference category */
+  storyArcReasoning: string;
+};
+
 export type WorldV2Package = {
   version: typeof import("./config").WORLD_V2_VERSION;
   category: V2CategoryKey;

@@ -65,6 +65,9 @@ export default function ProjectWebsite({
   }, []);
 
   const isWorldV2Home = WORLD_V2_ENABLED && !!sections.worldV2 && activePage === "home";
+  const isFoundationTemplate = !!(sections.foundation1Slots || sections.foundationId?.startsWith("foundation-"));
+  const suppressShell = isWorldV2Home || isFoundationTemplate;
+  const effectivePage: SitePageId = isFoundationTemplate ? "home" : activePage;
 
   const shell = isPreview
     ? "rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden"
@@ -101,9 +104,9 @@ export default function ProjectWebsite({
       <div
         ref={scrollRef}
         data-orchestra-scroll-root
-        className={`${isWorldV2Home ? "" : theme.page} ${isPreview ? "max-h-[640px] overflow-y-auto direction-scroll relative" : "min-h-screen"}`}
+        className={`${suppressShell ? "" : theme.page} ${isPreview ? "max-h-[640px] overflow-y-auto direction-scroll relative" : "min-h-screen"}`}
       >
-        {!isWorldV2Home && (
+        {!suppressShell && (
           <SiteNavigation
             brandLabel={sections.navbar.brandLabel}
             ctaLabel={sections.navbar.ctaLabel}
@@ -119,9 +122,9 @@ export default function ProjectWebsite({
           />
         )}
 
-        <main className={isWorldV2Home ? "" : "animate-fade-up"}>{renderSitePage(activePage, pageProps)}</main>
+        <main className={suppressShell ? "" : "animate-fade-up"}>{renderSitePage(effectivePage, pageProps)}</main>
 
-        {!isWorldV2Home && (
+        {!suppressShell && (
           <footer className={`text-center text-xs py-8 border-t ${theme.footer}`}>
             {sections.footer.tagline}
             {!isPreview && (

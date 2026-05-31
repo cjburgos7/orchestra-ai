@@ -6,7 +6,7 @@ import { runGenerateSectionsPipeline } from "@/lib/orchestration/pipelines/gener
 import { isStartupBrief } from "@/lib/orchestration/validators";
 
 export async function POST(request: Request) {
-  let body: { brief?: unknown; direction?: string; seed?: string };
+  let body: { brief?: unknown; direction?: string; seed?: string; foundationId?: string };
   try {
     body = await request.json();
   } catch {
@@ -27,6 +27,7 @@ export async function POST(request: Request) {
       brief: body.brief,
       direction,
       seed: typeof body.seed === "string" ? body.seed : undefined,
+      foundationId: typeof body.foundationId === "string" ? body.foundationId : undefined,
     });
     return NextResponse.json({ sections });
   } catch (err) {

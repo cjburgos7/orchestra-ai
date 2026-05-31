@@ -80,7 +80,7 @@ export function migrateProject(project: StartupProject): StartupProject {
   let sections = project.generatedSections;
   const direction = resolveRenderDirection(project.selectedDirection);
   const brief = briefFromProject(project);
-  if (sections && WORLD_V2_ENABLED) {
+  if (sections && WORLD_V2_ENABLED && !sections.worldV2) {
     sections = {
       ...sections,
       worldV2: buildWorldV2(brief, project.id),

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
 import DevStaleStateGuard from "./components/DevStaleStateGuard";
 import "./globals.css";
+
+const CAMERA_FONT_URL = "/fonts/CameraPlainVariable.woff2";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,20 +15,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const instrumentSerif = Instrument_Serif({
-  weight: ["400"],
-  style: ["normal", "italic"],
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-instrument-serif",
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
   title: "Orchestra AI — Launch your AI startup",
   description: "Build, preview, and launch AI startups without writing code.",
 };
-
-// Preload the CameraPlainVariable variable-weight serif for the landing page
-const CAMERA_FONT_URL = "https://cdn.gpteng.co/mcp-widgets/v1/fonts/CameraPlainVariable.woff2";
 
 export default function RootLayout({
   children,
@@ -36,7 +33,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} h-full antialiased`}
     >
       <head>
         <link rel="preload" href={CAMERA_FONT_URL} as="font" type="font/woff2" crossOrigin="anonymous" />

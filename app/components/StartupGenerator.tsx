@@ -37,6 +37,7 @@ export default function StartupGenerator() {
   const [reveal, setReveal] = useState(false);
   const [continuing, setContinuing] = useState(false);
   const [expandStep, setExpandStep] = useState(0);
+  const [selectedFoundation, setSelectedFoundation] = useState<"foundation-1" | "foundation-2">("foundation-1");
 
   const brief: StartupBrief | null = project ? briefFromProject(project) : null;
 
@@ -104,7 +105,7 @@ export default function StartupGenerator() {
       const res = await fetch("/api/generate-sections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brief, direction, seed: project.id }),
+        body: JSON.stringify({ brief, direction, seed: project.id, foundationId: selectedFoundation }),
       });
 
       const data = await res.json();
@@ -151,6 +152,32 @@ export default function StartupGenerator() {
             Type a sentence about the startup you want. We&apos;ll generate a name, pitch, features,
             and pricing — instantly.
           </p>
+        </div>
+
+        {/* Template picker — always visible */}
+        <div className="mb-5">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2.5 px-1">Choose a template</p>
+          <div className="flex gap-3">
+            {[
+              { id: "foundation-1" as const, label: "Aethera", sub: "Minimal · white & black", icon: "◻" },
+              { id: "foundation-2" as const, label: "Cinematic", sub: "Space travel · liquid glass", icon: "◈" },
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setSelectedFoundation(opt.id)}
+                className={`flex-1 rounded-2xl border p-4 text-left transition-all duration-200 ${
+                  selectedFoundation === opt.id
+                    ? "border-slate-900 bg-slate-900 text-white shadow-lg shadow-slate-900/20"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                }`}
+              >
+                <span className="text-lg mb-1 block">{opt.icon}</span>
+                <p className={`text-[13px] font-bold mb-0.5 ${selectedFoundation === opt.id ? "text-white" : "text-slate-800"}`}>{opt.label}</p>
+                <p className={`text-[11px] ${selectedFoundation === opt.id ? "text-white/60" : "text-slate-400"}`}>{opt.sub}</p>
+              </button>
+            ))}
+          </div>
         </div>
 
         <form onSubmit={handleGenerate} className="relative">
@@ -351,10 +378,33 @@ export default function StartupGenerator() {
                 <h4 className="text-2xl md:text-3xl font-serif font-light text-[#F5F2EC] tracking-tight mb-3 max-w-xl">
                   One immersive, image-led world — art directed from your idea.
                 </h4>
-                <p className="text-sm md:text-base text-white/50 max-w-lg leading-relaxed mb-8">
+                <p className="text-sm md:text-base text-white/50 max-w-lg leading-relaxed mb-6">
                   Orchestra is concentrating on depth: fullscreen scenes, category-native photography,
                   and emotionally coherent scroll — not six surface-level templates.
                 </p>
+
+                {/* Foundation picker */}
+                <div className="flex gap-3 mb-7">
+                  {[
+                    { id: "foundation-1" as const, label: "Aethera", sub: "Minimal · white & black" },
+                    { id: "foundation-2" as const, label: "Cinematic", sub: "Space travel · liquid glass" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setSelectedFoundation(opt.id)}
+                      className={`flex-1 rounded-xl border p-3.5 text-left transition-all duration-200 ${
+                        selectedFoundation === opt.id
+                          ? "border-white/30 bg-white/10 ring-1 ring-white/20"
+                          : "border-white/10 bg-white/5 opacity-55 hover:opacity-75"
+                      }`}
+                    >
+                      <p className="text-[13px] font-semibold text-white/90 mb-0.5">{opt.label}</p>
+                      <p className="text-[11px] text-white/40">{opt.sub}</p>
+                    </button>
+                  ))}
+                </div>
+
                 <button
                   type="button"
                   onClick={() => handleContinue()}

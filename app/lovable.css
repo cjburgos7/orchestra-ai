@@ -4,13 +4,6 @@
  * Light-mode platinum/lavender/graphite aesthetic
  */
 
-@font-face {
-  font-family: 'CameraPlainVariable';
-  src: url('https://cdn.gpteng.co/mcp-widgets/v1/fonts/CameraPlainVariable.woff2') format('woff2');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
 
 /* ── Design tokens ── */
 .lovable-root {
@@ -53,7 +46,7 @@
   --shadow-glow: 0 0 0 1px oklch(70% .11 295/.3), 0 8px 40px -8px oklch(70% .11 295/.5);
 
   /* Typography */
-  --font-serif: 'CameraPlainVariable', Georgia, serif;
+  --font-serif: var(--font-canela), 'Didot', 'Georgia', serif;
   --font-mono: 'SF Mono', 'Fira Code', monospace;
 
   background: var(--background);
@@ -66,7 +59,7 @@
   font-family: var(--font-serif);
   letter-spacing: -0.02em;
   font-weight: 400;
-  line-height: 0.95;
+  line-height: 1.0;
 }
 
 .text-gradient {

@@ -1,15 +1,48 @@
 import { NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
 import type { StartupProject } from "@/lib/types/startup";
-import { getOpenAIKey } from "@/lib/orchestration/openai-client";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
-function buildSystemPrompt(project: StartupProject | null): string {
+function buildSystemPrompt(project: StartupProject | null, mode: string): string {
+  const base = `You are Orchestra — an AI operating partner for founders. You think like a senior strategist, designer, and growth operator. You have real-time web search — use it actively to find actual businesses, real contact info, current market data, and live intelligence.
+
+CAPABILITIES YOU EXECUTE:
+- LEAD DISCOVERY: When asked to find businesses (e.g. "find florists in Austin"), search the web to find REAL businesses with actual names, addresses, and websites. Search Google Maps results, Yelp, local directories. Return 5–8 specific real leads with name, location, website if found, and a weakness observation.
+- OUTREACH: Draft 3 variants for a specific real business: (1) short email with subject line, (2) Instagram/social DM (under 150 chars), (3) in-person opener. Reference the prospect's specific observable weakness.
+- MARKET RESEARCH: Search for competitors, pricing, market size, recent news. Return real data with sources.
+- WEBSITE EDITING: Guide the founder on exactly what to change in their Orchestra site — which section, which field, what text.
+- ORCHESTRA GUIDANCE: Know every Orchestra feature: startup generation, Foundation templates (Aethera F1, Cinematic F2, Future F3), agent panel, lead pipeline, outreach tools. Guide step by step.
+- ACTION PLANNING: 7-day plan starting with warm connections before cold outreach. Each day has 3 specific tasks.
+- PIPELINE ADVICE: Qualify leads, suggest next actions, advise on follow-up timing.
+
+SEARCH BEHAVIOR:
+- Always search when asked to find businesses, people, or current information
+- Combine multiple searches (e.g., "florists Austin Texas" + "Austin florists yelp")
+- Extract real business names, phone numbers, websites from search results
+- Note when information may be outdated — tell the founder to verify before reaching out
+
+TONE:
+- Direct, specific, never generic
+- Under 200 words for conversational replies; structured format for lead lists and action plans
+- Never say "certainly", "absolutely", "great question"
+- Always end with ONE specific next action
+
+NEVER:
+- Recommend bulk email or spam
+- Fabricate business names, phone numbers, or emails that weren't in search results
+- Give generic advice not tied to the founder's actual situation`;
+
+  if (mode === "os") {
+    return `${base}
+
+CONTEXT: You are the always-on OS for this founder. No project loaded — help with lead discovery, outreach strategy, Orchestra features, or anything to move their business forward. When asked to find leads, search immediately and return real results.`;
+  }
+
   if (!project) {
-    return `You are Orchestra, an AI operating partner for founders building startups.
-Your job is to help founders articulate their startup idea and generate a world around it.
-Ask one focused question to understand their vision. Keep responses under 100 words.
-Never use bullet points. Never say "certainly", "absolutely", or generic filler.`;
+    return `${base}
+
+CONTEXT: Founder is exploring Orchestra. Help them understand what it does and guide them to generate their first startup world. Ask one focused question to understand their idea.`;
   }
 
   const world = project.generatedSections?.worldV2;
@@ -21,54 +54,23 @@ Never use bullet points. Never say "certainly", "absolutely", or generic filler.
   const hasPricing = tiers.length > 0 && tiers[0]?.price !== "Free";
   const hasImages = (project.generatedSections?.worldV2?.sections?.filter(s => s.images?.length > 0).length ?? 0) > 0;
 
-  const launchScore = [
-    hasPricing,
-    hasImages,
-    !!project.startupName,
-    !!project.generatedSections?.hero?.headline,
-    !!project.generatedSections?.testimonials?.[0],
-  ].filter(Boolean).length;
+  const launchScore = [hasPricing, hasImages, !!project.startupName, !!project.generatedSections?.hero?.headline, !!project.generatedSections?.testimonials?.[0]].filter(Boolean).length;
   const launchPct = Math.round((launchScore / 5) * 100);
 
-  return `You are Orchestra, an AI operating partner embedded in a startup generation platform.
+  return `${base}
 
 CURRENT STARTUP: "${project.startupName}"
 CATEGORY: ${world?.category ?? project.selectedDirection ?? "unknown"}
-WORLD: ${world?.categoryLabel ?? "undefined"} · ${world?.variantLabel ?? "undefined"}
 BRIEF: ${brief}
 PRICING: ${tiers.map(t => `${t.name} ${t.price}`).join(", ") || "not set"}
-LAUNCH PROGRESS: ${launchPct}% ready
-IMAGES: ${hasImages ? "generated" : "not yet generated"}
+LAUNCH PROGRESS: ${launchPct}%
+IMAGES: ${hasImages ? "generated" : "pending"}
 
-YOUR ROLE:
-You are a thoughtful, experienced operating partner — part senior designer, part strategist, part founder. You know this specific startup deeply.
-
-YOUR JOB:
-- Help the founder understand and deepen their generated startup world
-- Think about what the BEST version of this specific startup would look like in the real world
-- Ask strategic questions that reveal brand identity, not just product features
-- Suggest specific improvements grounded in this startup's category and story
-- Guide toward launch with concrete, specific next steps
-- Occasionally challenge assumptions when the direction seems weak
-
-YOUR TONE:
-- Concise and direct (under 120 words per response)
-- Thoughtful and specific — always reference the actual startup name and category
-- Editorial, confident, not corporate
-- End every message with ONE specific question or ONE concrete action
-
-NEVER:
-- Use bullet points in conversational replies
-- Say "certainly", "absolutely", "sure", "great question", or any filler
-- Give generic advice that applies to any startup
-- Pretend the startup is further along than it is
-
-CONTEXT:
-The founder can see their generated startup world. You are their operating partner, not a generic AI assistant. Treat them like a serious founder building something real.`;
+CONTEXT: You are embedded in this founder's startup workspace. Know this startup deeply. When asked to find leads, search for businesses that would benefit from this exact type of product/service.`;
 }
 
 export async function POST(request: Request) {
-  let body: { message: string; project: StartupProject | null; history: ChatMessage[] };
+  let body: { message: string; project?: StartupProject | null; history?: ChatMessage[]; mode?: string };
 
   try {
     body = await request.json();
@@ -76,39 +78,56 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { message, project, history = [] } = body;
+  const { message, project = null, history = [], mode = "default" } = body;
   if (!message?.trim()) {
     return NextResponse.json({ error: "Message required" }, { status: 400 });
   }
 
-  const apiKey = getOpenAIKey();
-
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o",
-      temperature: 0.88,
-      max_tokens: 300,
-      messages: [
-        { role: "system", content: buildSystemPrompt(project) },
-        ...history.slice(-12), // keep last 12 turns
-        { role: "user", content: message },
-      ],
-    }),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    console.error("[agent-chat] OpenAI error:", res.status, errText);
-    return NextResponse.json({ error: "Agent unavailable. Check your API key." }, { status: 502 });
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json({ error: "Agent unavailable — API key not configured." }, { status: 503 });
   }
 
-  const data = await res.json();
-  const response = data.choices?.[0]?.message?.content ?? "";
+  const client = new Anthropic({ apiKey });
 
-  return NextResponse.json({ response });
+  const messages: Anthropic.MessageParam[] = [
+    ...history.slice(-14).map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    })),
+    { role: "user" as const, content: message },
+  ];
+
+  try {
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1500,
+      system: buildSystemPrompt(project, mode),
+      tools: [
+        {
+          type: "web_search_20250305" as const,
+          name: "web_search",
+          max_uses: 5,
+        },
+      ],
+      messages,
+    });
+
+    // Web search is server-executed — Claude searches internally and returns final text
+    // Extract all text blocks from the response content
+    let text = "";
+    for (const block of response.content) {
+      if (block.type === "text") {
+        text += block.text;
+      }
+    }
+
+    return NextResponse.json({
+      response: text || "I wasn't able to find a clear answer. Try rephrasing or being more specific about the location and business type.",
+    });
+  } catch (err) {
+    console.error("[agent-chat] Anthropic error:", err);
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: `Agent unavailable: ${msg}` }, { status: 502 });
+  }
 }
